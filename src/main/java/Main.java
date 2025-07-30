@@ -38,8 +38,8 @@ public class Main {
         int correlationID = dIn.readInt();
         System.out.println("correlationID: " + correlationID);
 
-        short length = dIn.readShort();
-        System.out.println("length: " + length);
+        // short length = dIn.readShort();
+        // System.out.println("length: " + length);
 
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
@@ -48,9 +48,9 @@ public class Main {
         dOut.writeInt(correlationID);
         int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
         dOut.writeShort(code);
-        dOut.writeShort(length);
-        dOut.writeShort(requestApiKey);
-        dOut.writeShort(4);
+        // dOut.writeShort(length);
+        // dOut.writeShort(requestApiKey);
+        // dOut.writeShort(4);
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
