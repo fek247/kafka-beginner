@@ -36,14 +36,14 @@ public class Main {
         System.out.println("request_api_key: " + requestApiKey);
         System.out.println("request_api_version: " +requestApiVersion);
 
-        byte[] correlationID = new byte[4];
-        dIn.read(correlationID);
-        System.out.println("correlationID: " + Arrays.toString(correlationID));
+        int correlationID = dIn.readInt();
+        System.out.println("correlationID: " + correlationID);
 
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
         dOut.write(correlationID);
+
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
