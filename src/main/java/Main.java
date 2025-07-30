@@ -42,6 +42,9 @@ public class Main {
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
+        dOut.writeInt(message_size);
+        dOut.writeShort(requestApiKey);
+        dOut.writeShort(requestApiVersion);
         dOut.writeInt(correlationID);
 
     } catch (IOException e) {
