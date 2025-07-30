@@ -1,4 +1,6 @@
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,6 +20,10 @@ public class Main {
 		serverSocket.setReuseAddress(true);
 		// Wait for connection from client.
       	clientSocket = serverSocket.accept();
+        byte[] correlationID = {00, 00, 00, 00, 00, 00, 00, 07};
+        OutputStream outputStream = clientSocket.getOutputStream();
+        DataOutputStream dOut = new DataOutputStream(outputStream);
+        dOut.write(correlationID);
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
