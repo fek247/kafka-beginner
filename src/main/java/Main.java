@@ -44,7 +44,8 @@ public class Main {
         DataOutputStream dOut = new DataOutputStream(outputStream);
         dOut.writeInt(message_size);
         dOut.writeInt(correlationID);
-
+        int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
+        dOut.writeShort(code);
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
