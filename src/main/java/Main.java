@@ -26,7 +26,7 @@ public class Main {
         // Read
         InputStream inputStream = clientSocket.getInputStream();
         DataInputStream dIn = new DataInputStream(inputStream);
-        byte[] message_size = new byte[8];
+        byte[] message_size = new byte[4];
         System.out.println("Input stream: " + dIn);
         dIn.read(message_size);
         System.out.println("Message size: " + message_size);
