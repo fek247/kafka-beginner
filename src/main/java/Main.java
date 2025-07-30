@@ -46,8 +46,8 @@ public class Main {
         DataOutputStream dOut = new DataOutputStream(outputStream);
         dOut.writeInt(messageSize);
         dOut.writeInt(correlationID);
-        int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
-        dOut.writeShort(code);
+        // int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
+        // dOut.writeShort(code);
         // dOut.writeShort(length);
         // dOut.writeShort(requestApiKey);
         // dOut.writeShort(4);
