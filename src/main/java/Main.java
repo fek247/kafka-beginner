@@ -28,7 +28,7 @@ public class Main {
         InputStream inputStream = clientSocket.getInputStream();
         DataInputStream dIn = new DataInputStream(inputStream);
         byte[] message_size = new byte[4];
-        System.out.println("Input stream: " + dIn);
+        System.out.println("Input stream: " + Arrays.toString(dIn.readAllBytes()));
         dIn.read(message_size);
         System.out.println("Message size: " + Arrays.toString(message_size));
         byte[] requestApiKey = new byte[2];
