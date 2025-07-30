@@ -48,7 +48,7 @@ public class Main {
         dOut.writeInt(correlationID);
         int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
         dOut.writeShort(code);
-        dOut.write(length);
+        dOut.writeShort(length);
         dOut.writeShort(requestApiKey);
         dOut.writeShort(4);
     } catch (IOException e) {
