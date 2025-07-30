@@ -30,11 +30,13 @@ public class Main {
         System.out.println("Input stream: " + dIn);
         dIn.read(message_size);
         System.out.println("Message size: " + message_size);
-        int request_api_key = dIn.readInt();
-        int request_api_version = dIn.readInt();
-        System.out.println("request_api_key: " + request_api_key);
-        System.out.println("request_api_version: " + request_api_version);
-        byte[] correlationID = new byte[8];
+        byte[] requestApiKey = new byte[2];
+        byte[] requestApiVersion = new byte[2];
+        dIn.read(requestApiKey);
+        dIn.read(requestApiVersion);
+        System.out.println("request_api_key: " + requestApiKey);
+        System.out.println("request_api_version: " + requestApiVersion);
+        byte[] correlationID = new byte[4];
         dIn.read(correlationID);
         System.out.println("correlationID: " + correlationID);
         // Write
