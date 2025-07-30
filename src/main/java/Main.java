@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class Main {
   public static void main(String[] args){
@@ -28,8 +27,8 @@ public class Main {
         InputStream inputStream = clientSocket.getInputStream();
         DataInputStream dIn = new DataInputStream(inputStream);
 
-        int message_size = dIn.readInt();
-        System.out.println("Message size: " + message_size);
+        int messageSize = dIn.readInt();
+        System.out.println("Message size: " + messageSize);
 
         short requestApiKey = dIn.readShort();
         short requestApiVersion = dIn.readShort();
@@ -42,10 +41,11 @@ public class Main {
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
-        dOut.writeInt(message_size);
+        dOut.writeInt(messageSize);
         dOut.writeInt(correlationID);
         int code = (requestApiVersion < 0 || requestApiVersion > 4) ? 35 : 0;
         dOut.writeShort(code);
+        dOut.writeShort(requestApiKey);
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
