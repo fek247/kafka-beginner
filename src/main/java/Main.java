@@ -42,7 +42,7 @@ public class Main {
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
-        dOut.write(correlationID);
+        dOut.writeInt(correlationID);
 
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
