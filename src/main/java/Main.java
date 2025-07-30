@@ -27,19 +27,19 @@ public class Main {
         // Read
         InputStream inputStream = clientSocket.getInputStream();
         DataInputStream dIn = new DataInputStream(inputStream);
-        byte[] message_size = new byte[4];
-        System.out.println("Input stream: " + Arrays.toString(dIn.readAllBytes()));
-        dIn.read(message_size);
-        System.out.println("Message size: " + Arrays.toString(message_size));
-        byte[] requestApiKey = new byte[2];
-        byte[] requestApiVersion = new byte[2];
-        dIn.read(requestApiKey);
-        dIn.read(requestApiVersion);
-        System.out.println("request_api_key: " + Arrays.toString(requestApiKey));
-        System.out.println("request_api_version: " + Arrays.toString(requestApiVersion));
+
+        int message_size = dIn.readInt();
+        System.out.println("Message size: " + message_size);
+
+        short requestApiKey = dIn.readShort();
+        short requestApiVersion = dIn.readShort();
+        System.out.println("request_api_key: " + requestApiKey);
+        System.out.println("request_api_version: " +requestApiVersion);
+
         byte[] correlationID = new byte[4];
         dIn.read(correlationID);
         System.out.println("correlationID: " + Arrays.toString(correlationID));
+
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
