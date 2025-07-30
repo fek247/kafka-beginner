@@ -28,7 +28,7 @@ public class Main {
         DataInputStream dIn = new DataInputStream(inputStream);
         dIn.skipBytes(8);
         byte[] correlationID = new byte[8];
-        dIn.readFully(correlationID);
+        dIn.read(correlationID, 0, 8);
 
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
