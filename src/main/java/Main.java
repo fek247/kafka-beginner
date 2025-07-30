@@ -1,5 +1,7 @@
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,7 +22,13 @@ public class Main {
 		serverSocket.setReuseAddress(true);
 		// Wait for connection from client.
       	clientSocket = serverSocket.accept();
-        byte[] correlationID = {00, 00, 00, 00, 00, 00, 00, 07};
+
+        // Read
+        InputStream inputStream = clientSocket.getInputStream();
+        byte[] correlationID = {};
+        inputStream.read(correlationID, 12, 8);
+
+        // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
         dOut.write(correlationID);
