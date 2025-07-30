@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class Main {
   public static void main(String[] args){
@@ -29,16 +30,16 @@ public class Main {
         byte[] message_size = new byte[4];
         System.out.println("Input stream: " + dIn);
         dIn.read(message_size);
-        System.out.println("Message size: " + message_size);
+        System.out.println("Message size: " + Arrays.toString(message_size));
         byte[] requestApiKey = new byte[2];
         byte[] requestApiVersion = new byte[2];
         dIn.read(requestApiKey);
         dIn.read(requestApiVersion);
-        System.out.println("request_api_key: " + requestApiKey);
-        System.out.println("request_api_version: " + requestApiVersion);
+        System.out.println("request_api_key: " + Arrays.toString(requestApiKey));
+        System.out.println("request_api_version: " + Arrays.toString(requestApiVersion));
         byte[] correlationID = new byte[4];
         dIn.read(correlationID);
-        System.out.println("correlationID: " + correlationID);
+        System.out.println("correlationID: " + Arrays.toString(correlationID));
         // Write
         OutputStream outputStream = clientSocket.getOutputStream();
         DataOutputStream dOut = new DataOutputStream(outputStream);
