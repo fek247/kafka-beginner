@@ -1,9 +1,4 @@
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 public class Main {
@@ -16,25 +11,14 @@ public class Main {
     Socket clientSocket = null;
     int port = 9092;
     try {
-		serverSocket = new ServerSocket(port);
-		// Since the tester restarts your program quite often, setting SO_REUSEADDR
+        serverSocket = new ServerSocket(port);
+        // Since the tester restarts your program quite often, setting SO_REUSEADDR
 		// ensures that we don't run into 'Address already in use' errors
-		serverSocket.setReuseAddress(true);
-		// Wait for connection from client.
-      	clientSocket = serverSocket.accept();
-
-        InputStream inputStream = clientSocket.getInputStream();
-        DataInputStream dataInputStream = new DataInputStream(inputStream);
-        OutputStream outputStream = clientSocket.getOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-        ApiVersion apiVersion = new ApiVersion(dataInputStream, dataOutputStream);
-
-        while ((dataInputStream.read()) != -1) {
-            // Skip next three byte belong to message size
-            dataInputStream.skip(3);
-            apiVersion.read();
-            apiVersion.write();
-        }
+        serverSocket.setReuseAddress(true);
+        while (true) {
+            SocketHandler socketHandler = new SocketHandler(serverSocket.accept());
+            socketHandler.start();
+        }      	
     } catch (IOException e) {
       	System.out.println("IOException: " + e.getMessage());
     } finally {
