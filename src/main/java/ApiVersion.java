@@ -95,7 +95,7 @@ public class ApiVersion {
             dOut.writeShort(code);
             // API Version Array
                 // Array Length
-                dOut.writeByte(5);
+                dOut.writeByte(4);
                 // API Version #1
                     // API Key
                     dOut.writeShort(1);
@@ -108,7 +108,7 @@ public class ApiVersion {
 
                 // API Version #2
                     // API Key
-                    dOut.writeShort(18);
+                    dOut.writeShort(this.getApiKey());
                     // Min Supported API Version
                     dOut.writeShort(0);
                     // Max Supported API Version
@@ -118,23 +118,13 @@ public class ApiVersion {
 
                 // API Version #3
                     // API Key
-                    dOut.writeShort(this.getApiKey());
+                    dOut.writeShort(75);
                     // Min Supported API Version
                     dOut.writeShort(0);
                     // Max Supported API Version
                     dOut.writeShort(4);
                     // Tag Buffer
                     dOut.writeByte(this.getTagBuffer());
-
-                // API Version #4
-                    dOut.writeShort(this.getApiKey());
-                    // Min Supported API Version
-                    dOut.writeShort(0);
-                    // Max Supported API Version
-                    dOut.writeShort(4);
-                    // Tag Buffer
-                    dOut.writeByte(this.getTagBuffer());
-
             // Throttle Time
             dOut.writeInt(0);
 
