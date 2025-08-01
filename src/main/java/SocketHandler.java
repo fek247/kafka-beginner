@@ -20,13 +20,32 @@ public class SocketHandler extends Thread {
             DataInputStream dataInputStream = new DataInputStream(inputStream);
             OutputStream outputStream = socket.getOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-            ApiVersion apiVersion = new ApiVersion(dataInputStream, dataOutputStream);
+            BaseApi baseBodyApi = null;
 
             while ((dataInputStream.read()) != -1) {
                 // Skip next three byte belong to message size
                 dataInputStream.skip(3);
-                apiVersion.read();
-                apiVersion.write();
+
+                // Read header
+                RequestHeader header = new RequestHeader();
+                header.setApiKey(dataInputStream.readShort());
+                header.setApiVersion(dataInputStream.readShort());
+                header.setCorrelationId(dataInputStream.readInt());
+                header.setClientLength(dataInputStream.readShort());
+                byte[] headerContent = new byte[header.getHeaderLength()];
+                dataInputStream.read(headerContent);
+                header.setClientContent(headerContent);
+                header.setTagBuffer(dataInputStream.readByte());
+                if (header.getApiKey() == ApiKey.ApiVersions) {
+                    baseBodyApi = new ApiVersion(dataInputStream, dataOutputStream);
+                }
+                if (header.getApiKey() == ApiKey.DescribeTopicPartitions) {
+                    baseBodyApi = new TopicPartition(dataInputStream, dataOutputStream);
+                }
+
+                baseBodyApi.setHeader(header);
+                baseBodyApi.read();
+                baseBodyApi.write();
             }
         } catch (IOException e) {
             System.out.println("Local address: " + socket.getLocalAddress());
