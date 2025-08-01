@@ -8,7 +8,7 @@ public class ApiVersion extends BaseApi {
 
     private byte bodyLength;
 
-    private byte[] bodyContent = new byte[9];
+    private byte[] bodyContent;
 
     private int softwareVersion;
 
@@ -36,7 +36,7 @@ public class ApiVersion extends BaseApi {
         }
         try {
             setBodyLength(dataInputStream.readByte());
-            byte[] bodyContent = new byte[9];
+            byte[] bodyContent = new byte[this.getBodyLength()];
             dataInputStream.read(bodyContent);
             setBodyContent(bodyContent);
             setSoftwareVersion(dataInputStream.readInt());
