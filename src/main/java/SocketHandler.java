@@ -37,9 +37,11 @@ public class SocketHandler extends Thread {
                 header.setClientContent(headerContent);
                 header.setTagBuffer(dataInputStream.readByte());
                 if (header.getApiKey() == ApiKey.ApiVersions) {
+                    System.out.println("API version request");
                     baseBodyApi = new ApiVersion(dataInputStream, dataOutputStream);
                 }
                 if (header.getApiKey() == ApiKey.DescribeTopicPartitions) {
+                    System.out.println("Describe Topic Partitions");
                     baseBodyApi = new TopicPartition(dataInputStream, dataOutputStream);
                 }
 
