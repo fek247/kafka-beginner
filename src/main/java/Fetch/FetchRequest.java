@@ -1,6 +1,7 @@
 package Fetch;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import Helpers.VarIntReader;
@@ -22,25 +23,41 @@ public class FetchRequest {
 
     private List<TopicRequest> topicRequests;
 
+    private int forgottenTopicLength;
+
     private List<ForgottenTopicRequest> forgottenTopicRequests;
 
     private int rackIdLength;
 
     private byte[] rackIdContent;
 
+    private byte tagBuffer;
+
     public void request(DataInputStream dataInputStream) {
         try {
-            setMaxWaitMs(dataInputStream.readInt());
-            setMinBytes(dataInputStream.readInt());
-            setMaxBytes(dataInputStream.readInt());
-            setIsolationLevel(dataInputStream.readByte());
-            setSessionId(dataInputStream.readInt());
-            setSessionEpoch(dataInputStream.readInt());
-            int topicLength = VarIntReader.readSignedVarInt(dataInputStream);
-            setTopicLength(topicLength);
-            for (int i = 0; i < topicLength; i++) {
-                
-            }
+            System.out.println(Arrays.toString(dataInputStream.readAllBytes()));
+            // setMaxWaitMs(dataInputStream.readInt());
+            // setMinBytes(dataInputStream.readInt());
+            // setMaxBytes(dataInputStream.readInt());
+            // setIsolationLevel(dataInputStream.readByte());
+            // setSessionId(dataInputStream.readInt());
+            // setSessionEpoch(dataInputStream.readInt());
+            // int topicLength = VarIntReader.readSignedVarInt(dataInputStream);
+            // setTopicLength(topicLength);
+            // for (int i = 0; i < topicLength; i++) {
+            //     // TODO Request Topic
+            // }
+            // int forgottenTopicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            // setForgottenTopicLength(forgottenTopicLength);
+            // for (int i = 0; i < forgottenTopicLength; i++) {
+            //     // TODO Request Topic
+            // }
+            // int rackIdLength = VarIntReader.readSignedVarInt(dataInputStream);
+            // setRackIdLength(rackIdLength);
+            // byte[] rackId = new byte[rackIdLength - 1];
+            // dataInputStream.read(rackId);
+            // setRackIdContent(rackId);
+            // setTagBuffer(dataInputStream.readByte());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,5 +149,21 @@ public class FetchRequest {
 
     public void setTopicLength(int topicLength) {
         this.topicLength = topicLength;
+    }
+
+    public int getForgottenTopicLength() {
+        return forgottenTopicLength;
+    }
+
+    public void setForgottenTopicLength(int forgottenTopicLength) {
+        this.forgottenTopicLength = forgottenTopicLength;
+    }
+
+    public byte getTagBuffer() {
+        return tagBuffer;
+    }
+
+    public void setTagBuffer(byte tagBuffer) {
+        this.tagBuffer = tagBuffer;
     }
 }
