@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import Helpers.VarIntReader;
+
 public class TopicPartition extends BaseApi {
     public static short NO_ERROR = 0;
 

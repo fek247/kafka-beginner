@@ -1,6 +1,8 @@
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import Helpers.VarIntReader;
+
 public class TopicRequest {
     private int nameLength;
 
