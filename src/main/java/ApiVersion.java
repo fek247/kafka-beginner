@@ -2,6 +2,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class ApiVersion extends BaseApi {
     public static int UNSUPPORTED_VERSION = 35;
@@ -10,7 +11,9 @@ public class ApiVersion extends BaseApi {
 
     private byte[] bodyContent;
 
-    private int softwareVersion;
+    private byte softwareVersionLength;
+
+    private byte[] softwareVersionContent;
 
     public ApiVersion(DataInputStream inputStream)
     {
@@ -36,10 +39,13 @@ public class ApiVersion extends BaseApi {
         }
         try {
             setBodyLength(dataInputStream.readByte());
-            byte[] bodyContent = new byte[this.getBodyLength()];
+            byte[] bodyContent = new byte[this.getBodyLength() - 1];
             dataInputStream.read(bodyContent);
             setBodyContent(bodyContent);
-            setSoftwareVersion(dataInputStream.readInt());
+            setSoftwareVersionLength(dataInputStream.readByte());
+            byte[] softwareVersionContent = new byte[this.softwareVersionLength - 1];
+            dataInputStream.read(softwareVersionContent);
+            setSoftwareVersionContent(softwareVersionContent);
             // Skip last tag buffer, already set above
             dataInputStream.skip(1);
         } catch (IOException e) {
@@ -127,11 +133,6 @@ public class ApiVersion extends BaseApi {
         this.bodyContent = bodyContent;
     }
 
-    private void setSoftwareVersion(int softwareVersion)
-    {
-        this.softwareVersion = softwareVersion;
-    }
-
     public byte getBodyLength()
     {
         return this.bodyLength;
@@ -142,8 +143,19 @@ public class ApiVersion extends BaseApi {
         return this.bodyContent;
     }
 
-    public int getSoftwareVersion()
-    {
-        return this.softwareVersion;
+    public byte getSoftwareVersionLength() {
+        return softwareVersionLength;
+    }
+
+    public void setSoftwareVersionLength(byte softwareVersionLength) {
+        this.softwareVersionLength = softwareVersionLength;
+    }
+
+    public byte[] getSoftwareVersionContent() {
+        return softwareVersionContent;
+    }
+
+    public void setSoftwareVersionContent(byte[] softwareVersionContent) {
+        this.softwareVersionContent = softwareVersionContent;
     }
 }

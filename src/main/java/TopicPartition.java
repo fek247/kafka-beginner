@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TopicPartition extends BaseApi {
-    public static int NO_ERROR = 0;
+    public static short NO_ERROR = 0;
 
-    public static int UNKNOWN_TOPIC_OR_PARTITION = 3;
+    public static short UNKNOWN_TOPIC_OR_PARTITION = 3;
 
-    private byte arrayLength;
+    private int arrayLength;
+
+    private List<TopicRequest> topicRequests;
 
     private byte nameLength;
     
@@ -38,7 +40,7 @@ public class TopicPartition extends BaseApi {
         this.dataOutputStream = outputStream;
     }
 
-    private void setArrayLength(byte arrayLength)
+    private void setArrayLength(int arrayLength)
     {
         this.arrayLength = arrayLength;
     }
@@ -87,13 +89,15 @@ public class TopicPartition extends BaseApi {
             return;
         }
         try {
-            setArrayLength(dataInputStream.readByte());
-            setNameLength(dataInputStream.readByte());
-            byte[] name = new byte[this.nameLength - 1];
-            dataInputStream.read(name);
-            setName(name);
+            setArrayLength(VarIntReader.readUnsignedVarInt(dataInputStream));
+            List<TopicRequest> topicRequests = new ArrayList<>();
+            for (int i = 0; i < this.arrayLength - 1; i++) {
+                TopicRequest topicRequest = new TopicRequest();
+                topicRequest.request(dataInputStream);
+                topicRequests.add(topicRequest);
+            }
+            setTopicRequests(topicRequests);
             checkValidTopic(Arrays.toString(name));
-            setTagBuffer(dataInputStream.readByte());
             setPartitionLimit(dataInputStream.readInt());
             setCursor(dataInputStream.readByte());
             // Skip last tag buffer, already set above
@@ -130,57 +134,59 @@ public class TopicPartition extends BaseApi {
             dOut.writeInt(0);
             // Topic Array
                 // Array Length
-                dOut.writeByte(2);
+                dOut.write(this.arrayLength);
                 // Topic
-                    // Error code
-                    if (this.getUUID() == null) {
-                        dOut.writeShort(UNKNOWN_TOPIC_OR_PARTITION);
-                    } else {
-                        dOut.writeShort(NO_ERROR);
-                    }
-                    // Topic name
-                        // Length
-                        dOut.writeByte(this.nameLength);
-                        // Contents
-                        dOut.write(this.name);
-                    // Topic ID
-                    if (this.getUUID() != null) {
-                        dOut.write(this.getUUID());
-                    } else {
-                        byte[] topicUuid = new byte[16];
-                        dOut.write(topicUuid);
-                    }
-                    // Is Internal
-                    dOut.writeByte(0);
-                    // Partitions Array
-                    dOut.write(this.getPartionRecords().size() + 1);
-                    for (PartitionRecord partitionRecord : this.partitionRecords) {
-                        PartitionRecordValue value = partitionRecord.getValue();
-                        dOut.writeShort(NO_ERROR);
-                        dOut.writeInt(value.getPartitionId());
-                        dOut.writeInt(value.getLeader());
-                        dOut.writeInt(value.getLeaderEpoch());
-                        dOut.write(value.getReplicas().length + 1);
-                        for (int i = 0; i < value.getReplicas().length; i++) {
-                            dOut.writeInt(value.getReplicas()[i]);
+                    for (TopicRequest topicRequest : this.topicRequests) {
+                        TopicRecord topicRecord = (TopicRecord) this.getTopicInMetadatLog(Arrays.toString(topicRequest.getName()));
+
+                        TopicResponse topicResponse = new TopicResponse();
+                        short errorCode = topicRecord == null ? UNKNOWN_TOPIC_OR_PARTITION : NO_ERROR;
+                        topicResponse.setErrorCode(errorCode);
+                        topicResponse.setTopicNameLength(topicRequest.getNameLength());
+                        topicResponse.setTopicName(topicRequest.getName());
+                        if (topicRecord != null) {
+                            TopicRecordValue topicRecordValue = (TopicRecordValue) topicRecord.getValue();
+                            topicResponse.setTopicUUID(topicRecordValue.getUuid());
+                        } else {
+                            byte[] unknowTopicUUID = new byte[16];
+                            topicResponse.setTopicUUID(unknowTopicUUID);
                         }
-                        dOut.write(value.getInSyncReplicas().length + 1);
-                        for (int i = 0; i < value.getInSyncReplicas().length; i++) {
-                            dOut.writeInt(value.getInSyncReplicas()[i]);
+                        topicResponse.setInternal(false);
+                        // Partition Array
+                        List<PartitionResponse> listPartitionResponses = new ArrayList<>();
+                        for (PartitionRecord partitionRecord : this.partitionRecords) {
+                            PartitionRecordValue partitionRecordValue = partitionRecord.getValue();
+                            if (Arrays.toString(partitionRecordValue.getTopicUUID()).equals(Arrays.toString(topicResponse.getTopicUUID()))) {
+                                PartitionResponse partitionResponse = new PartitionResponse();
+                                partitionResponse.setErrorCode(NO_ERROR);
+                                partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
+                                partitionResponse.setLeader(partitionRecordValue.getLeader());
+                                partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
+                                partitionResponse.setReplicasLength(partitionRecordValue.getReplicas().length + 1);
+                                partitionResponse.setReplicas(partitionRecordValue.getReplicas());
+                                partitionResponse.setInSyncReplicasLength(partitionRecordValue.getInSyncReplicas().length + 1);
+                                partitionResponse.setInSyncReplicas(partitionRecordValue.getInSyncReplicas());
+                                partitionResponse.setEligibleLeaderReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                                int[] emptyIntegerArr = new int[0];
+                                partitionResponse.setEligibleLeaderReplicas(emptyIntegerArr);
+                                partitionResponse.setLastKnowELRLength(partitionRecordValue.getInSyncReplicas().length);
+                                partitionResponse.setLastKnowELR(emptyIntegerArr);
+                                partitionResponse.setOfflineReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                                partitionResponse.setOfflineReplicas(emptyIntegerArr);
+                                partitionResponse.setTagBuffer(this.tagBuffer);
+                                listPartitionResponses.add(partitionResponse);
+                            }
                         }
-                        dOut.write(value.getInSyncReplicas().length);
-                        dOut.write(value.getInSyncReplicas().length);
-                        dOut.write(value.getOfflineReplicaLength());
-                        // Tag buffer
-                        dOut.writeByte(this.header.getTagBuffer());
+                        topicResponse.setPartitionsLength(listPartitionResponses.size() + 1);
+                        topicResponse.setPartitionsResponse(listPartitionResponses);
+                        topicResponse.setTopicAuthorizedOperations(3567);
+                        topicResponse.setTagBuffer(this.tagBuffer);
+                        // Write to data stream
+                        topicResponse.response(dOut);
                     }
-                    // Topic Authorized Operations
-                    dOut.writeInt(3576);
-                    // Tag Buffer
-                    dOut.writeByte(this.header.getTagBuffer());
-            // Next Cursor
+            // Next cursor
             dOut.writeByte(this.cursor);
-            // Tag Buffer
+            // Tag buffer
             dOut.writeByte(this.header.getTagBuffer());
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
@@ -280,19 +286,17 @@ public class TopicPartition extends BaseApi {
                                 int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
 
                                 // Insert to list topic
-                                if (Arrays.toString(topicUUID).equals(Arrays.toString(this.getUUID()))) {
-                                    PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
-                                    partitionRecordValue.setPartitionId(partitionId);
-                                    partitionRecordValue.setTopicUUID(topicUUID);
-                                    partitionRecordValue.setLeader(leader);
-                                    partitionRecordValue.setLeaderEpoch(leaderEpoch);
-                                    partitionRecordValue.setReplicas(replicaArr);
-                                    partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
-                                    partitionRecordValue.setOfflineReplicaLength(removingReplicaLength);
-                                    PartitionRecord partitionRecord = new PartitionRecord();
-                                    partitionRecord.setValue(partitionRecordValue);
-                                    partitionRecords.add(partitionRecord);
-                                }
+                                PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
+                                partitionRecordValue.setPartitionId(partitionId);
+                                partitionRecordValue.setTopicUUID(topicUUID);
+                                partitionRecordValue.setLeader(leader);
+                                partitionRecordValue.setLeaderEpoch(leaderEpoch);
+                                partitionRecordValue.setReplicas(replicaArr);
+                                partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
+                                partitionRecordValue.setOfflineReplicaLength(removingReplicaLength);
+                                PartitionRecord partitionRecord = new PartitionRecord();
+                                partitionRecord.setValue(partitionRecordValue);
+                                partitionRecords.add(partitionRecord);
                                 break;
                             }
                         default:
@@ -313,7 +317,7 @@ public class TopicPartition extends BaseApi {
         }
     }
 
-    public byte getArrayLength()
+    public int getArrayLength()
     {
         return this.arrayLength;
     }
@@ -346,5 +350,25 @@ public class TopicPartition extends BaseApi {
     public List<PartitionRecord> getPartionRecords()
     {
         return this.partitionRecords;
+    }
+
+    public List<TopicRequest> getTopicRequests() {
+        return topicRequests;
+    }
+
+    public void setTopicRequests(List<TopicRequest> topicRequests) {
+        this.topicRequests = topicRequests;
+    }
+
+    public Record getTopicInMetadatLog(String name)
+    {
+        for(Record record : this.records) {
+            TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
+            if (Arrays.toString(recordValue.getName()).equals(name)) {
+                return record;
+            }
+        }
+
+        return null;
     }
 }
