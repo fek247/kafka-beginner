@@ -61,8 +61,9 @@ public class ApiVersion extends BaseApi {
 
         ByteArrayOutputStream byteArrBodyRes = this.responseBody();
         try {
-            this.dataOutputStream.writeInt(byteArrBodyRes.size() + 4);
+            this.dataOutputStream.writeInt(byteArrBodyRes.size() + 5);
             this.dataOutputStream.writeInt(this.header.getCorrelationId());
+            this.dataOutputStream.writeByte(this.header.getTagBuffer());
             this.dataOutputStream.write(byteArrBodyRes.toByteArray());
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());

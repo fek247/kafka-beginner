@@ -1,7 +1,6 @@
 package Fetch;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import Helpers.VarIntReader;
@@ -35,29 +34,28 @@ public class FetchRequest {
 
     public void request(DataInputStream dataInputStream) {
         try {
-            System.out.println(Arrays.toString(dataInputStream.readAllBytes()));
-            // setMaxWaitMs(dataInputStream.readInt());
-            // setMinBytes(dataInputStream.readInt());
-            // setMaxBytes(dataInputStream.readInt());
-            // setIsolationLevel(dataInputStream.readByte());
-            // setSessionId(dataInputStream.readInt());
-            // setSessionEpoch(dataInputStream.readInt());
-            // int topicLength = VarIntReader.readSignedVarInt(dataInputStream);
-            // setTopicLength(topicLength);
-            // for (int i = 0; i < topicLength; i++) {
-            //     // TODO Request Topic
-            // }
-            // int forgottenTopicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
-            // setForgottenTopicLength(forgottenTopicLength);
-            // for (int i = 0; i < forgottenTopicLength; i++) {
-            //     // TODO Request Topic
-            // }
-            // int rackIdLength = VarIntReader.readSignedVarInt(dataInputStream);
-            // setRackIdLength(rackIdLength);
-            // byte[] rackId = new byte[rackIdLength - 1];
-            // dataInputStream.read(rackId);
-            // setRackIdContent(rackId);
-            // setTagBuffer(dataInputStream.readByte());
+            setMaxWaitMs(dataInputStream.readInt());
+            setMinBytes(dataInputStream.readInt());
+            setMaxBytes(dataInputStream.readInt());
+            setIsolationLevel(dataInputStream.readByte());
+            setSessionId(dataInputStream.readInt());
+            setSessionEpoch(dataInputStream.readInt());
+            int topicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            setTopicLength(topicLength);
+            for (int i = 0; i < topicLength - 1; i++) {
+                // TODO Request Topic
+            }
+            int forgottenTopicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            setForgottenTopicLength(forgottenTopicLength);
+            for (int i = 0; i < forgottenTopicLength - 1; i++) {
+                // TODO Request Topic
+            }
+            int rackIdLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            setRackIdLength(rackIdLength);
+            byte[] rackId = new byte[rackIdLength - 1];
+            dataInputStream.read(rackId);
+            setRackIdContent(rackId);
+            setTagBuffer(dataInputStream.readByte());
         } catch (IOException e) {
             e.printStackTrace();
         }
