@@ -1,6 +1,8 @@
 package Fetch;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import Helpers.VarIntReader;
@@ -42,13 +44,19 @@ public class FetchRequest {
             setSessionEpoch(dataInputStream.readInt());
             int topicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
             setTopicLength(topicLength);
+            System.out.println("Topic length: " + topicLength);
+            List<TopicRequest> topicRequests = new ArrayList<>();
             for (int i = 0; i < topicLength - 1; i++) {
-                // TODO Request Topic
+                TopicRequest topicRequest = new TopicRequest();
+                topicRequest.request(dataInputStream);
+                topicRequests.add(topicRequest);
             }
+            setTopicRequests(topicRequests);
             int forgottenTopicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
             setForgottenTopicLength(forgottenTopicLength);
-            for (int i = 0; i < forgottenTopicLength - 1; i++) {
-                // TODO Request Topic
+            for (int i = 0; i < forgottenTopicLength; i++) {
+                ForgottenTopicRequest forgottenTopicRequest = new ForgottenTopicRequest();
+                forgottenTopicRequest.request(dataInputStream);
             }
             int rackIdLength = VarIntReader.readUnsignedVarInt(dataInputStream);
             setRackIdLength(rackIdLength);

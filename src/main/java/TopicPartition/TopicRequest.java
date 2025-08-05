@@ -1,6 +1,7 @@
+package TopicPartition;
+
 import java.io.DataInputStream;
 import java.io.IOException;
-
 import Helpers.VarIntReader;
 
 public class TopicRequest {

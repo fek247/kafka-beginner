@@ -1,3 +1,5 @@
+package Abstract;
+
 public abstract class RecordValue {
     public final byte type;
 

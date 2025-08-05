@@ -1,3 +1,6 @@
+package Common;
+import Abstract.RecordValue;
+
 public class PartitionRecordValue extends RecordValue {
     public static byte PARTITION_TYPE = 3;
 

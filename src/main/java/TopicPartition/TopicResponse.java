@@ -1,6 +1,7 @@
+package TopicPartition;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 public class TopicResponse {

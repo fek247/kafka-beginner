@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import Common.ApiKey;
+import Common.MetadataLogFile;
+
 public class SocketHandler extends Thread {
     private Socket socket;
 

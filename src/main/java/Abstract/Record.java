@@ -1,3 +1,5 @@
+package Abstract;
+
 public abstract class Record {
     protected byte length;
 

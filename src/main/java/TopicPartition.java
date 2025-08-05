@@ -9,13 +9,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import Abstract.Record;
+import Common.ErrorCode;
+import Common.MetadataLogFile;
+import Common.PartitionRecord;
+import Common.PartitionRecordValue;
 import Helpers.VarIntReader;
+import TopicPartition.PartitionResponse;
+import TopicPartition.TopicRecord;
+import TopicPartition.TopicRecordValue;
+import TopicPartition.TopicRequest;
+import TopicPartition.TopicResponse;
 
 public class TopicPartition extends BaseApi {
-    public static short NO_ERROR = 0;
-
-    public static short UNKNOWN_TOPIC_OR_PARTITION = 3;
-
     private int arrayLength;
 
     private List<TopicRequest> topicRequests;
@@ -32,7 +38,7 @@ public class TopicPartition extends BaseApi {
 
     private byte cursor;
 
-    private List<Record> records;
+    private List<TopicRecord> records;
 
     private List<PartitionRecord> partitionRecords;
 
@@ -77,7 +83,7 @@ public class TopicPartition extends BaseApi {
         this.cursor = cursor;
     }
 
-    public void setRecords(List<Record> records) {
+    public void setRecords(List<TopicRecord> records) {
         this.records = records;
     }
 
@@ -91,6 +97,12 @@ public class TopicPartition extends BaseApi {
             return;
         }
         try {
+            String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
+            MetadataLogFile metadataLogFile = new MetadataLogFile();
+            metadataLogFile.init(metadataLogFilePath);
+            setRecords(metadataLogFile.getTopicRecords());
+            setPartitionRecords(metadataLogFile.getPartitionRecords());
+
             setArrayLength(VarIntReader.readUnsignedVarInt(dataInputStream));
             List<TopicRequest> topicRequests = new ArrayList<>();
             for (int i = 0; i < this.arrayLength - 1; i++) {
@@ -99,7 +111,7 @@ public class TopicPartition extends BaseApi {
                 topicRequests.add(topicRequest);
             }
             setTopicRequests(topicRequests);
-            checkValidTopic(Arrays.toString(name));
+            //checkValidTopic(Arrays.toString(name));
             setPartitionLimit(dataInputStream.readInt());
             setCursor(dataInputStream.readByte());
             // Skip last tag buffer, already set above
@@ -142,7 +154,7 @@ public class TopicPartition extends BaseApi {
                         TopicRecord topicRecord = (TopicRecord) this.getTopicInMetadatLog(Arrays.toString(topicRequest.getName()));
 
                         TopicResponse topicResponse = new TopicResponse();
-                        short errorCode = topicRecord == null ? UNKNOWN_TOPIC_OR_PARTITION : NO_ERROR;
+                        short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC_OR_PARTITION : ErrorCode.NO_ERROR;
                         topicResponse.setErrorCode(errorCode);
                         topicResponse.setTopicNameLength(topicRequest.getNameLength());
                         topicResponse.setTopicName(topicRequest.getName());
@@ -160,7 +172,7 @@ public class TopicPartition extends BaseApi {
                             PartitionRecordValue partitionRecordValue = partitionRecord.getValue();
                             if (Arrays.toString(partitionRecordValue.getTopicUUID()).equals(Arrays.toString(topicResponse.getTopicUUID()))) {
                                 PartitionResponse partitionResponse = new PartitionResponse();
-                                partitionResponse.setErrorCode(NO_ERROR);
+                                partitionResponse.setErrorCode(ErrorCode.NO_ERROR);
                                 partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
                                 partitionResponse.setLeader(partitionRecordValue.getLeader());
                                 partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
@@ -197,127 +209,126 @@ public class TopicPartition extends BaseApi {
         return byteArr;
     }
 
-    public void checkValidTopic(String name)
-    {
-        try {
-            String path = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
-            InputStream inputStream = new FileInputStream(new File(path));
-            DataInputStream logDataInputStream = new DataInputStream(inputStream);
+    // public void checkValidTopic(String name)
+    // {
+    //     try {
+    //         String path = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
+    //         InputStream inputStream = new FileInputStream(new File(path));
+    //         DataInputStream logDataInputStream = new DataInputStream(inputStream);
 
-            List<Record> records = new ArrayList<>();
-            List<PartitionRecord> partitionRecords = new ArrayList<>();
-            while ((logDataInputStream.read()) != -1) {
-                // Skip next three byte belong to base offset
-                byte[] next7Byte = new byte[7]; 
-                logDataInputStream.read(next7Byte);
+    //         List<Record> records = new ArrayList<>();
+    //         List<PartitionRecord> partitionRecords = new ArrayList<>();
+    //         while ((logDataInputStream.read()) != -1) {
+    //             // Skip next three byte belong to base offset
+    //             byte[] next7Byte = new byte[7]; 
+    //             logDataInputStream.read(next7Byte);
 
-                int batchLength = logDataInputStream.readInt();
-                logDataInputStream.skip(45);
-                int recordsLength = logDataInputStream.readInt();
-                int i = 0;
-                while (i < recordsLength) {
-                    int recordLength = VarIntReader.readSignedVarInt(logDataInputStream);
-                    // Skip Attributes
-                    logDataInputStream.skip(1);
-                    int timestampDelta = VarIntReader.readSignedVarInt(logDataInputStream);
-                    int offsetDelta = VarIntReader.readSignedVarInt(logDataInputStream);
-                    int keyLength = VarIntReader.readSignedVarInt(logDataInputStream);
-                    if (keyLength == -1) {
-                        keyLength = 0;
-                    }
-                    logDataInputStream.skip(keyLength);
-                    int valueLength = VarIntReader.readSignedVarInt(logDataInputStream);
-                    // Skip Frame version
-                    logDataInputStream.skip(1);
-                    byte type = logDataInputStream.readByte();
-                    switch (type) {
-                        case 2:
-                            {
-                                // Skip Version
-                                logDataInputStream.skip(1);
-                                int topicNameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                byte[] topicName = new byte[topicNameLength - 1];
-                                logDataInputStream.read(topicName);
-                                byte[] topicUUID = new byte[16];
-                                logDataInputStream.read(topicUUID);
-                                // Skip Tagged Fields Count and Headers Array Count
-                                int taggedFieldsCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //             int batchLength = logDataInputStream.readInt();
+    //             logDataInputStream.skip(45);
+    //             int recordsLength = logDataInputStream.readInt();
+    //             int i = 0;
+    //             while (i < recordsLength) {
+    //                 int recordLength = VarIntReader.readSignedVarInt(logDataInputStream);
+    //                 // Skip Attributes
+    //                 logDataInputStream.skip(1);
+    //                 int timestampDelta = VarIntReader.readSignedVarInt(logDataInputStream);
+    //                 int offsetDelta = VarIntReader.readSignedVarInt(logDataInputStream);
+    //                 int keyLength = VarIntReader.readSignedVarInt(logDataInputStream);
+    //                 if (keyLength == -1) {
+    //                     keyLength = 0;
+    //                 }
+    //                 logDataInputStream.skip(keyLength);
+    //                 int valueLength = VarIntReader.readSignedVarInt(logDataInputStream);
+    //                 // Skip Frame version
+    //                 logDataInputStream.skip(1);
+    //                 byte type = logDataInputStream.readByte();
+    //                 switch (type) {
+    //                     case 2:
+    //                         {
+    //                             // Skip Version
+    //                             logDataInputStream.skip(1);
+    //                             int topicNameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             byte[] topicName = new byte[topicNameLength - 1];
+    //                             logDataInputStream.read(topicName);
+    //                             byte[] topicUUID = new byte[16];
+    //                             logDataInputStream.read(topicUUID);
+    //                             // Skip Tagged Fields Count and Headers Array Count
+    //                             int taggedFieldsCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
 
-                                // Set uuid
-                                if (Arrays.toString(topicName).equals(name)) {
-                                    setUUID(topicUUID);
-                                }
+    //                             // Set uuid
+    //                             if (Arrays.toString(topicName).equals(name)) {
+    //                                 setUUID(topicUUID);
+    //                             }
 
-                                // Insert to list topic
-                                TopicRecordValue topicRecordValue = new TopicRecordValue();
-                                topicRecordValue.setNameLength(topicNameLength);
-                                topicRecordValue.setName(topicName);
-                                topicRecordValue.setUuid(topicUUID);
-                                Record topicRecord = new TopicRecord();
-                                topicRecord.setValue(topicRecordValue);
-                                records.add(topicRecord);
-                                break;
-                            }
-                        case 3:
-                            {
-                                // Skip Version
-                                logDataInputStream.skip(1);
-                                int partitionId = logDataInputStream.readInt();
-                                byte[] topicUUID = new byte[16];
-                                logDataInputStream.read(topicUUID);
-                                int replicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int[] replicaArr = new int[replicaLength - 1];
-                                for (int j = 0; j < replicaArr.length; j++) {
-                                    replicaArr[j] = logDataInputStream.readInt();
-                                }
-                                int inSyncReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int[] inSyncReplicaArr = new int[inSyncReplicaLength - 1];
-                                for (int j = 0; j < inSyncReplicaArr.length; j++) {
-                                    inSyncReplicaArr[j] = logDataInputStream.readInt();
-                                }
-                                int removingReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int addingReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int leader = logDataInputStream.readInt();
-                                int leaderEpoch = logDataInputStream.readInt();
-                                int partitionEpoch = logDataInputStream.readInt();
-                                int directoryLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                byte[] directoryUUID = new byte[16];
-                                logDataInputStream.read(directoryUUID);
-                                int taggedFieldsCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             // Insert to list topic
+    //                             TopicRecordValue topicRecordValue = new TopicRecordValue();
+    //                             topicRecordValue.setNameLength(topicNameLength);
+    //                             topicRecordValue.setName(topicName);
+    //                             topicRecordValue.setUuid(topicUUID);
+    //                             Record topicRecord = new TopicRecord();
+    //                             topicRecord.setValue(topicRecordValue);
+    //                             records.add(topicRecord);
+    //                             break;
+    //                         }
+    //                     case 3:
+    //                         {
+    //                             // Skip Version
+    //                             logDataInputStream.skip(1);
+    //                             int partitionId = logDataInputStream.readInt();
+    //                             byte[] topicUUID = new byte[16];
+    //                             logDataInputStream.read(topicUUID);
+    //                             int replicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int[] replicaArr = new int[replicaLength - 1];
+    //                             for (int j = 0; j < replicaArr.length; j++) {
+    //                                 replicaArr[j] = logDataInputStream.readInt();
+    //                             }
+    //                             int inSyncReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int[] inSyncReplicaArr = new int[inSyncReplicaLength - 1];
+    //                             for (int j = 0; j < inSyncReplicaArr.length; j++) {
+    //                                 inSyncReplicaArr[j] = logDataInputStream.readInt();
+    //                             }
+    //                             int removingReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int addingReplicaLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int leader = logDataInputStream.readInt();
+    //                             int leaderEpoch = logDataInputStream.readInt();
+    //                             int partitionEpoch = logDataInputStream.readInt();
+    //                             int directoryLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             byte[] directoryUUID = new byte[16];
+    //                             logDataInputStream.read(directoryUUID);
+    //                             int taggedFieldsCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
 
-                                // Insert to list topic
-                                PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
-                                partitionRecordValue.setPartitionId(partitionId);
-                                partitionRecordValue.setTopicUUID(topicUUID);
-                                partitionRecordValue.setLeader(leader);
-                                partitionRecordValue.setLeaderEpoch(leaderEpoch);
-                                partitionRecordValue.setReplicas(replicaArr);
-                                partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
-                                partitionRecordValue.setOfflineReplicaLength(removingReplicaLength);
-                                PartitionRecord partitionRecord = new PartitionRecord();
-                                partitionRecord.setValue(partitionRecordValue);
-                                partitionRecords.add(partitionRecord);
-                                break;
-                            }
-                        default:
-                            {
-                                logDataInputStream.skip(valueLength - 2);
-                                int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                break;
-                            }
-                    }
-                    i++;
-                }
-            }
-            setRecords(records);
-            setPartitionRecords(partitionRecords);
-            System.out.println("Done read log metadata file");
-        } catch (IOException e) {
-            System.err.println("Error reading metadata log file: " + e.getMessage());
-        }
-    }
+    //                             // Insert to list topic
+    //                             PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
+    //                             partitionRecordValue.setPartitionId(partitionId);
+    //                             partitionRecordValue.setTopicUUID(topicUUID);
+    //                             partitionRecordValue.setLeader(leader);
+    //                             partitionRecordValue.setLeaderEpoch(leaderEpoch);
+    //                             partitionRecordValue.setReplicas(replicaArr);
+    //                             partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
+    //                             partitionRecordValue.setOfflineReplicaLength(removingReplicaLength);
+    //                             PartitionRecord partitionRecord = new PartitionRecord();
+    //                             partitionRecord.setValue(partitionRecordValue);
+    //                             partitionRecords.add(partitionRecord);
+    //                             break;
+    //                         }
+    //                     default:
+    //                         {
+    //                             logDataInputStream.skip(valueLength - 2);
+    //                             int headerArrayCount = VarIntReader.readUnsignedVarInt(logDataInputStream);
+    //                             break;
+    //                         }
+    //                 }
+    //                 i++;
+    //             }
+    //         }
+    //         setRecords(records);
+    //         setPartitionRecords(partitionRecords);
+    //     } catch (IOException e) {
+    //         System.err.println("Error reading metadata log file: " + e.getMessage());
+    //     }
+    // }
 
     public int getArrayLength()
     {

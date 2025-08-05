@@ -1,3 +1,7 @@
+package TopicPartition;
+
+import Abstract.RecordValue;
+
 public class TopicRecordValue extends RecordValue {
     public static byte TOPIC_TYPE = 2;
 
