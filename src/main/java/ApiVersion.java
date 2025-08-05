@@ -3,6 +3,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import Helpers.VarIntReader;
+
 public class ApiVersion extends BaseApi {
     public static int UNSUPPORTED_VERSION = 35;
 
@@ -10,7 +12,7 @@ public class ApiVersion extends BaseApi {
 
     private byte[] bodyContent;
 
-    private byte softwareVersionLength;
+    private int softwareVersionLength;
 
     private byte[] softwareVersionContent;
 
@@ -41,7 +43,8 @@ public class ApiVersion extends BaseApi {
             byte[] bodyContent = new byte[this.getBodyLength() - 1];
             dataInputStream.read(bodyContent);
             setBodyContent(bodyContent);
-            setSoftwareVersionLength(dataInputStream.readByte());
+            int softwareVersionLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            setSoftwareVersionLength(softwareVersionLength);
             byte[] softwareVersionContent = new byte[this.softwareVersionLength - 1];
             dataInputStream.read(softwareVersionContent);
             setSoftwareVersionContent(softwareVersionContent);
@@ -61,9 +64,8 @@ public class ApiVersion extends BaseApi {
 
         ByteArrayOutputStream byteArrBodyRes = this.responseBody();
         try {
-            this.dataOutputStream.writeInt(byteArrBodyRes.size() + 5);
+            this.dataOutputStream.writeInt(byteArrBodyRes.size() + 4);
             this.dataOutputStream.writeInt(this.header.getCorrelationId());
-            this.dataOutputStream.writeByte(this.header.getTagBuffer());
             this.dataOutputStream.write(byteArrBodyRes.toByteArray());
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
@@ -84,7 +86,7 @@ public class ApiVersion extends BaseApi {
                 dOut.writeByte(4);
                 // API Version #1
                     // API Key
-                    dOut.writeShort(1);
+                    dOut.writeShort(ApiKey.Fetch);
                     // Min Supported API Version
                     dOut.writeShort(0);
                     // Max Supported API Version
@@ -94,7 +96,7 @@ public class ApiVersion extends BaseApi {
 
                 // API Version #2
                     // API Key
-                    dOut.writeShort(this.header.getApiKey());
+                    dOut.writeShort(ApiKey.ApiVersions);
                     // Min Supported API Version
                     dOut.writeShort(0);
                     // Max Supported API Version
@@ -104,7 +106,7 @@ public class ApiVersion extends BaseApi {
 
                 // API Version #3
                     // API Key
-                    dOut.writeShort(75);
+                    dOut.writeShort(ApiKey.DescribeTopicPartitions);
                     // Min Supported API Version
                     dOut.writeShort(0);
                     // Max Supported API Version
@@ -143,11 +145,11 @@ public class ApiVersion extends BaseApi {
         return this.bodyContent;
     }
 
-    public byte getSoftwareVersionLength() {
+    public int getSoftwareVersionLength() {
         return softwareVersionLength;
     }
 
-    public void setSoftwareVersionLength(byte softwareVersionLength) {
+    public void setSoftwareVersionLength(int softwareVersionLength) {
         this.softwareVersionLength = softwareVersionLength;
     }
 
