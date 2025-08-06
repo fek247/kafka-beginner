@@ -54,7 +54,7 @@ public class FetchRequest {
             setTopicRequests(topicRequests);
             int forgottenTopicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
             setForgottenTopicLength(forgottenTopicLength);
-            for (int i = 0; i < forgottenTopicLength; i++) {
+            for (int i = 0; i < forgottenTopicLength - 1; i++) {
                 ForgottenTopicRequest forgottenTopicRequest = new ForgottenTopicRequest();
                 forgottenTopicRequest.request(dataInputStream);
             }

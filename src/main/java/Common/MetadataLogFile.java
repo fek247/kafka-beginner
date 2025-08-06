@@ -127,27 +127,11 @@ public class MetadataLogFile {
                 }
                 setTopicRecords(topicRecords);
                 setPartitionRecords(partitionRecords);
-                System.out.println("Done read log metadata file");
             }
+            System.out.println("Done read log metadata file");
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public List<TopicRecord> getTopicRecords() {
-        return topicRecords;
-    }
-
-    public void setTopicRecords(List<TopicRecord> topicRecords) {
-        this.topicRecords = topicRecords;
-    }
-
-    public List<PartitionRecord> getPartitionRecords() {
-        return partitionRecords;
-    }
-
-    public void setPartitionRecords(List<PartitionRecord> partitionRecords) {
-        this.partitionRecords = partitionRecords;
     }
 
     public TopicRecord getTopicInMetadatLog(String name)
@@ -172,5 +156,21 @@ public class MetadataLogFile {
         }
 
         return null;
+    }
+
+    public List<TopicRecord> getTopicRecords() {
+        return topicRecords;
+    }
+
+    public void setTopicRecords(List<TopicRecord> topicRecords) {
+        this.topicRecords = topicRecords;
+    }
+
+    public List<PartitionRecord> getPartitionRecords() {
+        return partitionRecords;
+    }
+
+    public void setPartitionRecords(List<PartitionRecord> partitionRecords) {
+        this.partitionRecords = partitionRecords;
     }
 }

@@ -5,12 +5,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import Common.ErrorCode;
 import Common.MetadataLogFile;
-import Common.PartitionRecord;
 import Fetch.FetchRequest;
 import Fetch.FetchResponse;
 import Fetch.PartitionRequest;
@@ -24,9 +22,7 @@ public class Fetch extends BaseApi {
 
     private FetchResponse fetchResponse;
 
-    private List<TopicRecord> topicRecords;
-
-    private List<PartitionRecord> partitionRecords;
+    private MetadataLogFile metadataLogFile;
 
     public Fetch(DataInputStream inputStream, DataOutputStream outputStream)
     {
@@ -38,6 +34,14 @@ public class Fetch extends BaseApi {
         if (dataInputStream == null) {
             return;
         }
+        
+        // Read metadata
+        String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
+        MetadataLogFile metadataLogFile = new MetadataLogFile();
+        metadataLogFile.init(metadataLogFilePath);
+        metadataLogFile.setTopicRecords(metadataLogFile.getTopicRecords());
+        metadataLogFile.setPartitionRecords(metadataLogFile.getPartitionRecords());
+        setMetadataLogFile(metadataLogFile);
 
         FetchRequest fetchRequest = new FetchRequest();
         fetchRequest.request(dataInputStream);
@@ -57,18 +61,13 @@ public class Fetch extends BaseApi {
             this.dataOutputStream.write(this.header.getTagBuffer());
             this.dataOutputStream.write(bodyResponse.toByteArray());
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("IOException: " + e.getMessage());
         }
     }
 
     private ByteArrayOutputStream initBodyResponseData()
     {
-        String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
-        MetadataLogFile metadataLogFile = new MetadataLogFile();
-        metadataLogFile.init(metadataLogFilePath);
-        setTopicRecords(metadataLogFile.getTopicRecords());
-        setPartitionRecords(metadataLogFile.getPartitionRecords());
-
         ByteArrayOutputStream byteArrBodyRes = new ByteArrayOutputStream();
         DataOutputStream dOutBody = new DataOutputStream(byteArrBodyRes);
         this.fetchResponse = new FetchResponse();
@@ -79,7 +78,7 @@ public class Fetch extends BaseApi {
         System.out.println("Topic length from response: " + this.fetchResponse.getTopicLength());
         List<TopicResponse> topicResponses = new ArrayList<>();
         for (TopicRequest topicRequest : this.fetchRequest.getTopicRequests()) {
-            TopicRecord topicRecord = metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
+            TopicRecord topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
             List<PartitionResponse> partitionResponses = new ArrayList<>();
             if (topicRecord == null) {
                 System.out.println("Unknown topic");
@@ -124,17 +123,10 @@ public class Fetch extends BaseApi {
     public void setFetchResponse(FetchResponse fetchResponse) {
         this.fetchResponse = fetchResponse;
     }
-
-    public List<TopicRecord> getTopicRecords() {
-        return topicRecords;
+    public MetadataLogFile getMetadataLogFile() {
+        return metadataLogFile;
     }
-    public void setTopicRecords(List<TopicRecord> topicRecords) {
-        this.topicRecords = topicRecords;
-    }
-    public List<PartitionRecord> getPartitionRecords() {
-        return partitionRecords;
-    }
-    public void setPartitionRecords(List<PartitionRecord> partitionRecords) {
-        this.partitionRecords = partitionRecords;
+    public void setMetadataLogFile(MetadataLogFile metadataLogFile) {
+        this.metadataLogFile = metadataLogFile;
     }
 }
