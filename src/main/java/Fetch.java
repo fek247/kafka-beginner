@@ -80,20 +80,20 @@ public class Fetch extends BaseApi {
         for (TopicRequest topicRequest : this.fetchRequest.getTopicRequests()) {
             TopicRecord topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
             List<PartitionResponse> partitionResponses = new ArrayList<>();
-            if (topicRecord == null) {
-                System.out.println("Unknown topic");
-                for (PartitionRequest partitionRequest : topicRequest.getPartitionRequests()) {
-                    PartitionResponse partitionResponse = new PartitionResponse();
-                    partitionResponse.setPartitionId(partitionRequest.getPartitionId());
-                    partitionResponse.setErrorCode(ErrorCode.UNKNOWN_TOPIC);
-                    // TODO
-                    partitionResponse.setHighWatermark(0);
-                    partitionResponse.setLastStableOffet(0);
-                    partitionResponse.setLogStartOffset(0);
-                    partitionResponse.setAbortTransactionLength(0);
-                    partitionResponses.add(partitionResponse);
-                }
+            short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC : ErrorCode.NO_ERROR;
+
+            for (PartitionRequest partitionRequest : topicRequest.getPartitionRequests()) {
+                PartitionResponse partitionResponse = new PartitionResponse();
+                partitionResponse.setPartitionId(partitionRequest.getPartitionId());
+                partitionResponse.setErrorCode(errorCode);
+                // TODO
+                partitionResponse.setHighWatermark(0);
+                partitionResponse.setLastStableOffet(0);
+                partitionResponse.setLogStartOffset(0);
+                partitionResponse.setAbortTransactionLength(0);
+                partitionResponses.add(partitionResponse);
             }
+
             TopicResponse topicResponse = new TopicResponse();
             topicResponse.setTopicUUID(topicRequest.getTopicUUID());
             topicResponse.setParitionLength(topicRequest.getPartitionLength());
