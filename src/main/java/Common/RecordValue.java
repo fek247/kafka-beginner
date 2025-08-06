@@ -1,6 +1,6 @@
-package Abstract;
+package Common;
 
-public abstract class RecordValue {
+public class RecordValue {
     public final byte type;
 
     public RecordValue(byte type) {

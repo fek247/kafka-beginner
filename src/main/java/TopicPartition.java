@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import Common.ErrorCode;
 import Common.MetadataLogFile;
-import Common.PartitionRecord;
 import Common.PartitionRecordValue;
+import Common.Record;
+import Common.TopicRecord;
+import Common.TopicRecordValue;
+import Constant.ErrorCode;
 import Helpers.VarIntReader;
 import TopicPartition.PartitionResponse;
-import TopicPartition.TopicRecord;
-import TopicPartition.TopicRecordValue;
 import TopicPartition.TopicRequest;
 import TopicPartition.TopicResponse;
 
@@ -87,8 +87,6 @@ public class TopicPartition extends BaseApi {
             String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
             MetadataLogFile metadataLogFile = new MetadataLogFile();
             metadataLogFile.init(metadataLogFilePath);
-            metadataLogFile.setTopicRecords(metadataLogFile.getTopicRecords());
-            metadataLogFile.setPartitionRecords(metadataLogFile.getPartitionRecords());
             setMetadataLogFile(metadataLogFile);
 
             setArrayLength(VarIntReader.readUnsignedVarInt(dataInputStream));
@@ -155,28 +153,31 @@ public class TopicPartition extends BaseApi {
                         topicResponse.setInternal(false);
                         // Partition Array
                         List<PartitionResponse> listPartitionResponses = new ArrayList<>();
-                        for (PartitionRecord partitionRecord : this.metadataLogFile.getPartitionRecords()) {
-                            PartitionRecordValue partitionRecordValue = partitionRecord.getValue();
-                            if (Arrays.toString(partitionRecordValue.getTopicUUID()).equals(Arrays.toString(topicResponse.getTopicUUID()))) {
-                                PartitionResponse partitionResponse = new PartitionResponse();
-                                partitionResponse.setErrorCode(ErrorCode.NO_ERROR);
-                                partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
-                                partitionResponse.setLeader(partitionRecordValue.getLeader());
-                                partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
-                                partitionResponse.setReplicasLength(partitionRecordValue.getReplicas().length + 1);
-                                partitionResponse.setReplicas(partitionRecordValue.getReplicas());
-                                partitionResponse.setInSyncReplicasLength(partitionRecordValue.getInSyncReplicas().length + 1);
-                                partitionResponse.setInSyncReplicas(partitionRecordValue.getInSyncReplicas());
-                                partitionResponse.setEligibleLeaderReplicaLength(partitionRecordValue.getInSyncReplicas().length);
-                                int[] emptyIntegerArr = new int[0];
-                                partitionResponse.setEligibleLeaderReplicas(emptyIntegerArr);
-                                partitionResponse.setLastKnowELRLength(partitionRecordValue.getInSyncReplicas().length);
-                                partitionResponse.setLastKnowELR(emptyIntegerArr);
-                                partitionResponse.setOfflineReplicaLength(partitionRecordValue.getInSyncReplicas().length);
-                                partitionResponse.setOfflineReplicas(emptyIntegerArr);
-                                partitionResponse.setTagBuffer(this.tagBuffer);
-                                listPartitionResponses.add(partitionResponse);
-                            }
+                        Record partitionRecord = this.metadataLogFile.getPartitionRecordByUUID(uuid);
+                        if (!(partitionRecord.getValue() instanceof PartitionRecordValue)) {
+                            System.out.println("Return wrong record value type");
+                        }
+
+                        if (partitionRecord != null) {
+                            PartitionRecordValue partitionRecordValue = (PartitionRecordValue) partitionRecord.getValue();
+                            PartitionResponse partitionResponse = new PartitionResponse();
+                            partitionResponse.setErrorCode(ErrorCode.NO_ERROR);
+                            partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
+                            partitionResponse.setLeader(partitionRecordValue.getLeader());
+                            partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
+                            partitionResponse.setReplicasLength(partitionRecordValue.getReplicas().length + 1);
+                            partitionResponse.setReplicas(partitionRecordValue.getReplicas());
+                            partitionResponse.setInSyncReplicasLength(partitionRecordValue.getInSyncReplicas().length + 1);
+                            partitionResponse.setInSyncReplicas(partitionRecordValue.getInSyncReplicas());
+                            partitionResponse.setEligibleLeaderReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                            int[] emptyIntegerArr = new int[0];
+                            partitionResponse.setEligibleLeaderReplicas(emptyIntegerArr);
+                            partitionResponse.setLastKnowELRLength(partitionRecordValue.getInSyncReplicas().length);
+                            partitionResponse.setLastKnowELR(emptyIntegerArr);
+                            partitionResponse.setOfflineReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                            partitionResponse.setOfflineReplicas(emptyIntegerArr);
+                            partitionResponse.setTagBuffer(this.tagBuffer);
+                            listPartitionResponses.add(partitionResponse);
                         }
                         topicResponse.setPartitionsLength(listPartitionResponses.size() + 1);
                         topicResponse.setPartitionsResponse(listPartitionResponses);

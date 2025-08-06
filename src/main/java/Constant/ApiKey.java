@@ -1,4 +1,4 @@
-package Common;
+package Constant;
 
 public class ApiKey {
     public static int Fetch = 1;

@@ -1,15 +1,19 @@
-package TopicPartition;
-
-import Abstract.RecordValue;
+package Common;
 
 public class TopicRecordValue extends RecordValue {
     public static byte TOPIC_TYPE = 2;
+
+    private byte frameVersion;
+
+    private byte version;
 
     private int nameLength;
 
     private byte[] name;
 
     private byte[] uuid;
+
+    private int taggedFieldsCount;
 
     public TopicRecordValue()
     {
@@ -38,5 +42,29 @@ public class TopicRecordValue extends RecordValue {
 
     public byte[] getUuid() {
         return uuid;
+    }
+
+    public byte getFrameVersion() {
+        return frameVersion;
+    }
+
+    public void setFrameVersion(byte frameVersion) {
+        this.frameVersion = frameVersion;
+    }
+
+    public byte getVersion() {
+        return version;
+    }
+
+    public void setVersion(byte version) {
+        this.version = version;
+    }
+
+    public int getTaggedFieldsCount() {
+        return taggedFieldsCount;
+    }
+
+    public void setTaggedFieldsCount(int taggedFieldsCount) {
+        this.taggedFieldsCount = taggedFieldsCount;
     }
 }

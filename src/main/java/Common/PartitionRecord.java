@@ -1,5 +1,4 @@
 package Common;
-import Abstract.Record;
 
 public class PartitionRecord extends Record {
     @Override

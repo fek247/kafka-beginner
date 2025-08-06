@@ -7,15 +7,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import Common.ErrorCode;
+// import Common.MessageFile;
 import Common.MetadataLogFile;
+import Common.Record;
+import Constant.ErrorCode;
 import Fetch.FetchRequest;
 import Fetch.FetchResponse;
 import Fetch.PartitionRequest;
 import Fetch.PartitionResponse;
 import Fetch.TopicRequest;
 import Fetch.TopicResponse;
-import TopicPartition.TopicRecord;
 
 public class Fetch extends BaseApi {
     private FetchRequest fetchRequest;
@@ -34,14 +35,17 @@ public class Fetch extends BaseApi {
         if (dataInputStream == null) {
             return;
         }
-        
+
         // Read metadata
         String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
         MetadataLogFile metadataLogFile = new MetadataLogFile();
         metadataLogFile.init(metadataLogFilePath);
-        metadataLogFile.setTopicRecords(metadataLogFile.getTopicRecords());
-        metadataLogFile.setPartitionRecords(metadataLogFile.getPartitionRecords());
         setMetadataLogFile(metadataLogFile);
+
+        // Read message from disk
+        // String messagesPath = "/tmp/kraft-combined-logs/bar-0/00000000000000000000.log";
+        // MessageFile messageFile = new MessageFile();
+        // messageFile.init(messagesPath);
 
         FetchRequest fetchRequest = new FetchRequest();
         fetchRequest.request(dataInputStream);
@@ -78,7 +82,7 @@ public class Fetch extends BaseApi {
         System.out.println("Topic length from response: " + this.fetchResponse.getTopicLength());
         List<TopicResponse> topicResponses = new ArrayList<>();
         for (TopicRequest topicRequest : this.fetchRequest.getTopicRequests()) {
-            TopicRecord topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
+            Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
             List<PartitionResponse> partitionResponses = new ArrayList<>();
             short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC : ErrorCode.NO_ERROR;
 

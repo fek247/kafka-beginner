@@ -1,4 +1,4 @@
-package Common;
+package Constant;
 
 public class ErrorCode {
     public static short NO_ERROR = 0;

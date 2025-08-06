@@ -3,7 +3,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import Common.ApiKey;
+import Constant.ApiKey;
 import Helpers.VarIntReader;
 
 public class ApiVersion extends BaseApi {
