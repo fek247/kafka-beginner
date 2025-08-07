@@ -1,5 +1,7 @@
 package Common;
 
+import java.io.DataOutputStream;
+
 public class RecordValue {
     public final byte type;
 
@@ -10,5 +12,10 @@ public class RecordValue {
     public byte getType()
     {
         return this.type;
+    }
+
+    public void response(DataOutputStream dataOutputStream)
+    {
+        // Empty
     }
 }

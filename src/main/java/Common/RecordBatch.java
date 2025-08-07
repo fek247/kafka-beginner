@@ -1,6 +1,10 @@
 package Common;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.zip.CRC32C;
 
 public class RecordBatch {
     private long baseOffset;
@@ -11,7 +15,7 @@ public class RecordBatch {
 
     private byte magicByte;
 
-    private int crc;
+    private byte[] crc;
 
     private short attributes;
 
@@ -30,6 +34,44 @@ public class RecordBatch {
     private int recordLength;
 
     private List<Record> records;
+
+    public void response(DataOutputStream dataOutputStream)
+    {
+        try {
+            dataOutputStream.writeLong(baseOffset);
+            dataOutputStream.writeInt(batchLength);
+            System.out.println("Batch length: " + batchLength);
+            dataOutputStream.writeInt(partitionLeaderEpoch);
+            dataOutputStream.writeByte(magicByte);
+
+            ByteArrayOutputStream payloadStream = new ByteArrayOutputStream();
+            DataOutputStream tempDos = new DataOutputStream(payloadStream);
+
+            tempDos.writeShort(attributes);
+            tempDos.writeInt(lastOffsetDelta);
+            tempDos.writeLong(baseTimestamp);
+            tempDos.writeLong(maxTimestamp);
+            tempDos.writeLong(producerId);
+            tempDos.writeShort(producerEpoch);
+            tempDos.writeInt(baseSequence);
+            tempDos.writeInt(recordLength);
+            for (Record record : records) {
+                record.response(tempDos);
+            }
+            
+            byte[] payloadBytes = payloadStream.toByteArray();
+
+            CRC32C crc32c = new CRC32C();
+            crc32c.update(payloadBytes);
+            int crcValue = (int) crc32c.getValue();
+
+            dataOutputStream.writeInt(crcValue);
+
+            dataOutputStream.write(payloadBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public long getBaseOffset() {
         return baseOffset;
@@ -63,11 +105,11 @@ public class RecordBatch {
         this.magicByte = magicByte;
     }
 
-    public int getCrc() {
+    public byte[] getCrc() {
         return crc;
     }
 
-    public void setCrc(int crc) {
+    public void setCrc(byte[] crc) {
         this.crc = crc;
     }
 

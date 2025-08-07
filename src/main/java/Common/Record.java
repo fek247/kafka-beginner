@@ -1,5 +1,8 @@
 package Common;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 public class Record {
     protected int length;
 
@@ -23,6 +26,30 @@ public class Record {
 
     // Var unsigned int
     private int headerArrayCount;
+
+    public void response(DataOutputStream dataOutputStream)
+    {
+        try {
+            dataOutputStream.write(length);
+            System.out.println("Length: " + length);
+            dataOutputStream.writeByte(attributes);
+            System.out.println("attributes: " + attributes);
+            dataOutputStream.write(timestampDelta);
+            System.out.println("timestampDelta: " + timestampDelta);
+            dataOutputStream.write(offsetDelta);
+            System.out.println("offsetDelta: " + offsetDelta);
+            dataOutputStream.write(keyLength);
+            System.out.println("keyLength: " + keyLength);
+            dataOutputStream.write(key);
+            System.out.println("Key length" + key.length);
+            dataOutputStream.write(valueLength);
+            System.out.println("valueLength: " + valueLength);
+            value.response(dataOutputStream);
+            dataOutputStream.write(headerArrayCount);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void setLength(int length) {
         this.length = length;

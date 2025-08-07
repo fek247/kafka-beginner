@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import Common.MetadataLogFile;
+import Common.LogFileReader;
 import Common.PartitionRecordValue;
 import Common.Record;
 import Common.TopicRecord;
@@ -34,7 +34,7 @@ public class TopicPartition extends BaseApi {
 
     private byte cursor;
 
-    private MetadataLogFile metadataLogFile;
+    private LogFileReader metadataLogFile;
 
     public TopicPartition(DataInputStream inputStream, DataOutputStream outputStream)
     {
@@ -85,8 +85,8 @@ public class TopicPartition extends BaseApi {
         try {
             // Read metadata log file
             String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
-            MetadataLogFile metadataLogFile = new MetadataLogFile();
-            metadataLogFile.init(metadataLogFilePath);
+            LogFileReader metadataLogFile = new LogFileReader();
+            metadataLogFile.init(metadataLogFilePath, true);
             setMetadataLogFile(metadataLogFile);
 
             setArrayLength(VarIntReader.readUnsignedVarInt(dataInputStream));
@@ -235,11 +235,11 @@ public class TopicPartition extends BaseApi {
         this.topicRequests = topicRequests;
     }
 
-    public MetadataLogFile getMetadataLogFile() {
+    public LogFileReader getMetadataLogFile() {
         return metadataLogFile;
     }
 
-    public void setMetadataLogFile(MetadataLogFile metadataLogFile) {
+    public void setMetadataLogFile(LogFileReader metadataLogFile) {
         this.metadataLogFile = metadataLogFile;
     }
 }

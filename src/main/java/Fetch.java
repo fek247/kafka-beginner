@@ -7,8 +7,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import Common.MetadataLogFile;
+import Common.LogFileReader;
 import Common.Record;
+import Common.RecordBatch;
 import Constant.ErrorCode;
 import Fetch.FetchRequest;
 import Fetch.FetchResponse;
@@ -22,7 +23,7 @@ public class Fetch extends BaseApi {
 
     private FetchResponse fetchResponse;
 
-    private MetadataLogFile metadataLogFile;
+    private LogFileReader metadataLogFile;
 
     public Fetch(DataInputStream inputStream, DataOutputStream outputStream)
     {
@@ -37,13 +38,17 @@ public class Fetch extends BaseApi {
 
         // Read metadata
         String metadataLogFilePath = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
-        MetadataLogFile metadataLogFile = new MetadataLogFile();
-        metadataLogFile.init(metadataLogFilePath);
+        LogFileReader metadataLogFile = new LogFileReader();
+        metadataLogFile.init(metadataLogFilePath, true);
         setMetadataLogFile(metadataLogFile);
-        List<String> filePaths = metadataLogFile.getMessageFileStrings();
-        for (String filePath : filePaths) {
-            System.out.println(filePath);
-        }
+        // List<String> filePaths = metadataLogFile.getMessageFileStrings();
+        // for (String filePath : filePaths) {
+        //     LogFileReader topicFileReader = new LogFileReader();
+        //     topicFileReader.init(filePath, false);
+        //     List<RecordBatch> recordBatchs = topicFileReader.getRecordBatchs();
+        //     System.out.println("Record batch size on file path " + filePath + " is: " + recordBatchs.size());
+        //     break;
+        // }
 
         FetchRequest fetchRequest = new FetchRequest();
         fetchRequest.request(dataInputStream);
@@ -93,6 +98,12 @@ public class Fetch extends BaseApi {
                 partitionResponse.setLastStableOffet(0);
                 partitionResponse.setLogStartOffset(0);
                 partitionResponse.setAbortTransactionLength(0);
+                partitionResponse.setPreferredReadReplica(0);
+                String topicFileLog = "/tmp/kraft-combined-logs/" + this.metadataLogFile.getTopicName(topicRequest.getTopicUUID()) + "-" + partitionRequest.getPartitionId() + "/00000000000000000000.log";
+                LogFileReader topicFileReader = new LogFileReader();
+                topicFileReader.init(topicFileLog, false);
+                partitionResponse.setRecordBatchLength(topicFileReader.getRecordBatchs().size() + 1);
+                partitionResponse.setRecordBatchs(topicFileReader.getRecordBatchs());
                 partitionResponses.add(partitionResponse);
             }
 
@@ -125,10 +136,10 @@ public class Fetch extends BaseApi {
     public void setFetchResponse(FetchResponse fetchResponse) {
         this.fetchResponse = fetchResponse;
     }
-    public MetadataLogFile getMetadataLogFile() {
+    public LogFileReader getMetadataLogFile() {
         return metadataLogFile;
     }
-    public void setMetadataLogFile(MetadataLogFile metadataLogFile) {
+    public void setMetadataLogFile(LogFileReader metadataLogFile) {
         this.metadataLogFile = metadataLogFile;
     }
 }

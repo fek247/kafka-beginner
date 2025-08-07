@@ -4,6 +4,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import Common.RecordBatch;
+
 public class PartitionResponse {
     private int partitionId;
 
@@ -21,9 +23,10 @@ public class PartitionResponse {
 
     private int preferredReadReplica;
 
-    private int recordLength;
+    private int recordBatchLength;
 
-    private int[] records;
+    // private List<RecordBatchResponse> recordBatchResponses;
+    private List<RecordBatch> recordBatchs;
 
     private byte tagBuffer;
     
@@ -40,9 +43,9 @@ public class PartitionResponse {
                 abortTransactionResponses.get(i).response(dataOutputStream);
             }
             dataOutputStream.writeInt(preferredReadReplica);
-            dataOutputStream.write(recordLength);
-            for (int i = 0; i < recordLength; i++) {
-                dataOutputStream.writeInt(records[i]);
+            dataOutputStream.write(recordBatchLength);
+            for (RecordBatch recordBatch : this.recordBatchs) {
+                recordBatch.response(dataOutputStream);
             }
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {
@@ -82,15 +85,15 @@ public class PartitionResponse {
         this.preferredReadReplica = preferredReadReplica;
     }
 
-    public void setRecordLength(int recordLength) {
-        this.recordLength = recordLength;
-    }
-
-    public void setRecords(int[] records) {
-        this.records = records;
+    public void setRecordBatchLength(int recordBatchLength) {
+        this.recordBatchLength = recordBatchLength;
     }
 
     public void setTagBuffer(byte tagBuffer) {
         this.tagBuffer = tagBuffer;
+    }
+
+    public void setRecordBatchs(List<RecordBatch> recordBatchs) {
+        this.recordBatchs = recordBatchs;
     }
 }
