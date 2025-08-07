@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -249,27 +248,30 @@ public class MetadataLogFile {
                 }
                 if (record.getValue().getType() == 3) {
                     PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
-                    if (!topicPartitions.containsKey(recordValue.getTopicUUID())) {
-                        List<Integer> partitionArr = new ArrayList<>();
-                        partitionArr.add(recordValue.getPartitionId());
-                        topicPartitions.put(recordValue.getTopicUUID(), partitionArr);
-                    } else {
-                        List<Integer> partitionArr = topicPartitions.get(recordValue.getTopicUUID());
-                        partitionArr.add(recordValue.getPartitionId());
-                        topicPartitions.put(recordValue.getTopicUUID(), partitionArr);
+                    List<Integer> partitionArr = new ArrayList<>();
+                    if (topicPartitions.get(recordValue.getTopicUUID()) != null) {
+                        partitionArr = topicPartitions.get(recordValue.getTopicUUID());
                     }
+                    partitionArr.add(recordValue.getPartitionId());
+                    topicPartitions.put(recordValue.getTopicUUID(), partitionArr);
                 }
             }
+        }
+
+        for (byte[] uuid : topicPartitions.keySet()) {
+            System.err.println("Partition int arr: " + topicPartitions.get(uuid));
         }
 
         for (byte[] uuid : topicNameUUIDs.keySet()) {
             byte[] name = topicNameUUIDs.get(uuid);
             List<Integer> partitionArr = topicPartitions.get(uuid);
-            for (Integer partitionId : partitionArr) {
-                String nameStr = new String(name, StandardCharsets.UTF_8);
-                String topicPartitionFolder = tempPath + nameStr + "-" + partitionId + "/00000000000000000000.log";
-                results.add(topicPartitionFolder);
-            }
+            // System.out.println("Topic uuid: " + Arrays.toString(uuid));
+            // System.out.println("Partition array: " + topicPartitions.get(uuid));
+            // for (Integer partitionId : partitionArr) {
+            //     String nameStr = new String(name, StandardCharsets.UTF_8);
+            //     String topicPartitionFolder = tempPath + nameStr + "-" + partitionId + "/00000000000000000000.log";
+            //     results.add(topicPartitionFolder);
+            // }
         }
 
         return results;
