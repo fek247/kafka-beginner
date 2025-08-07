@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import Helpers.VarIntReader;
 
@@ -228,6 +231,48 @@ public class MetadataLogFile {
         }
 
         return null;
+    }
+
+    public List<String> getMessageFileStrings()
+    {
+        String tempPath = "/tmp/kraft-combined-logs/";
+        Map<byte[], List<Integer>> topicPartitions = new HashMap<>();
+        Map<byte[], byte[]> topicNameUUIDs = new HashMap<>();
+        List<String> results = new ArrayList<>();
+
+        for (RecordBatch recordBatch : this.recordBatchs) {
+            for (Record record : recordBatch.getRecords()) {
+                if (record.getValue().getType() == 2) {
+                    TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
+                    topicPartitions.put(recordValue.getUuid(), null);
+                    topicNameUUIDs.put(recordValue.getUuid(), recordValue.getName());
+                }
+                if (record.getValue().getType() == 3) {
+                    PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
+                    if (!topicPartitions.containsKey(recordValue.getTopicUUID())) {
+                        List<Integer> partitionArr = new ArrayList<>();
+                        partitionArr.add(recordValue.getPartitionId());
+                        topicPartitions.put(recordValue.getTopicUUID(), partitionArr);
+                    } else {
+                        List<Integer> partitionArr = topicPartitions.get(recordValue.getTopicUUID());
+                        partitionArr.add(recordValue.getPartitionId());
+                        topicPartitions.put(recordValue.getTopicUUID(), partitionArr);
+                    }
+                }
+            }
+        }
+
+        for (byte[] uuid : topicNameUUIDs.keySet()) {
+            byte[] name = topicNameUUIDs.get(uuid);
+            List<Integer> partitionArr = topicPartitions.get(uuid);
+            for (Integer partitionId : partitionArr) {
+                String nameStr = new String(name, StandardCharsets.UTF_8);
+                String topicPartitionFolder = tempPath + nameStr + "-" + partitionId + "/00000000000000000000.log";
+                results.add(topicPartitionFolder);
+            }
+        }
+
+        return results;
     }
 
     public List<RecordBatch> getRecordBatchs() {

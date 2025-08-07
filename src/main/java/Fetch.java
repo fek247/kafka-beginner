@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-// import Common.MessageFile;
 import Common.MetadataLogFile;
 import Common.Record;
 import Constant.ErrorCode;
@@ -41,11 +40,10 @@ public class Fetch extends BaseApi {
         MetadataLogFile metadataLogFile = new MetadataLogFile();
         metadataLogFile.init(metadataLogFilePath);
         setMetadataLogFile(metadataLogFile);
-
-        // Read message from disk
-        // String messagesPath = "/tmp/kraft-combined-logs/bar-0/00000000000000000000.log";
-        // MessageFile messageFile = new MessageFile();
-        // messageFile.init(messagesPath);
+        List<String> filePaths = metadataLogFile.getMessageFileStrings();
+        for (String filePath : filePaths) {
+            System.out.println(filePath);
+        }
 
         FetchRequest fetchRequest = new FetchRequest();
         fetchRequest.request(dataInputStream);
