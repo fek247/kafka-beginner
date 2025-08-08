@@ -2,6 +2,7 @@ package Fetch;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import Helpers.VarIntReader;
@@ -19,7 +20,7 @@ public class FetchRequest {
 
     private int sessionEpoch;
 
-    private int topicLength;
+    private byte topicLength;
 
     private List<TopicRequest> topicRequests;
 
@@ -41,9 +42,8 @@ public class FetchRequest {
             setIsolationLevel(dataInputStream.readByte());
             setSessionId(dataInputStream.readInt());
             setSessionEpoch(dataInputStream.readInt());
-            int topicLength = VarIntReader.readUnsignedVarInt(dataInputStream);
+            byte topicLength = dataInputStream.readByte();
             setTopicLength(topicLength);
-            System.out.println("Topic length: " + topicLength);
             List<TopicRequest> topicRequests = new ArrayList<>();
             for (int i = 0; i < topicLength - 1; i++) {
                 TopicRequest topicRequest = new TopicRequest();
@@ -152,7 +152,7 @@ public class FetchRequest {
         return topicLength;
     }
 
-    public void setTopicLength(int topicLength) {
+    public void setTopicLength(byte topicLength) {
         this.topicLength = topicLength;
     }
 

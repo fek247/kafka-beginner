@@ -54,7 +54,6 @@ public class LogFileReader {
                 recordBatch.setProducerEpoch(logDataInputStream.readShort());
                 recordBatch.setBaseSequence(logDataInputStream.readInt());
                 recordBatch.setRecordLength(logDataInputStream.readInt());
-
                 List<Record> records = new ArrayList<>();
                 int i = 0;
                 while (i < recordBatch.getRecordLength()) {

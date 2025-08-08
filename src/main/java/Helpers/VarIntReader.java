@@ -56,4 +56,16 @@ public class VarIntReader {
 
         return out.toByteArray();
     }
+
+    public static byte[] encodeUnsignedVarInt(int value) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        while ((value & 0xFFFFFF80) != 0L) {
+            out.write((value & 0x7F) | 0x80);
+            value >>>= 7;
+        }
+        out.write(value & 0x7F);
+
+        return out.toByteArray();
+    }
 }

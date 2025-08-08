@@ -23,9 +23,8 @@ public class PartitionResponse {
 
     private int preferredReadReplica;
 
-    private int recordBatchLength;
+    private byte[] recordCompactLength;
 
-    // private List<RecordBatchResponse> recordBatchResponses;
     private List<RecordBatch> recordBatchs;
 
     private byte tagBuffer;
@@ -43,9 +42,9 @@ public class PartitionResponse {
                 abortTransactionResponses.get(i).response(dataOutputStream);
             }
             dataOutputStream.writeInt(preferredReadReplica);
-            dataOutputStream.write(recordBatchLength);
-            for (int i = 0; i < recordBatchLength - 1; i++) {
-                recordBatchs.get(i).response(dataOutputStream);
+            dataOutputStream.write(recordCompactLength);
+            for (RecordBatch recordBatch : this.recordBatchs) {
+                recordBatch.response(dataOutputStream);
             }
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {
@@ -85,8 +84,8 @@ public class PartitionResponse {
         this.preferredReadReplica = preferredReadReplica;
     }
 
-    public void setRecordBatchLength(int recordBatchLength) {
-        this.recordBatchLength = recordBatchLength;
+    public void setRecordCompactLength(byte[] recordCompactLength) {
+        this.recordCompactLength = recordCompactLength;
     }
 
     public void setTagBuffer(byte tagBuffer) {

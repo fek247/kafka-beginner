@@ -9,6 +9,7 @@ import java.util.List;
 
 import Common.LogFileReader;
 import Common.Record;
+import Common.RecordBatch;
 import Constant.ErrorCode;
 import Fetch.FetchRequest;
 import Fetch.FetchResponse;
@@ -16,6 +17,7 @@ import Fetch.PartitionRequest;
 import Fetch.PartitionResponse;
 import Fetch.TopicRequest;
 import Fetch.TopicResponse;
+import Helpers.VarIntReader;
 
 public class Fetch extends BaseApi {
     private FetchRequest fetchRequest;
@@ -84,7 +86,6 @@ public class Fetch extends BaseApi {
                 PartitionResponse partitionResponse = new PartitionResponse();
                 partitionResponse.setPartitionId(partitionRequest.getPartitionId());
                 partitionResponse.setErrorCode(errorCode);
-                // TODO
                 partitionResponse.setHighWatermark(0);
                 partitionResponse.setLastStableOffet(0);
                 partitionResponse.setLogStartOffset(0);
@@ -95,10 +96,15 @@ public class Fetch extends BaseApi {
                     String topicFileLog = "/tmp/kraft-combined-logs/" + topicName + "-" + partitionRequest.getPartitionId() + "/00000000000000000000.log";
                     LogFileReader topicFileReader = new LogFileReader();
                     topicFileReader.init(topicFileLog, false);
-                    partitionResponse.setRecordBatchLength(topicFileReader.getRecordBatchs().size() + 1);
+                    int totalRecords = 0;
+                    for (RecordBatch recordBatch : topicFileReader.getRecordBatchs()) {
+                        totalRecords += 12 + recordBatch.getBatchLength();
+                    }
+                    partitionResponse.setRecordCompactLength(VarIntReader.encodeUnsignedVarInt(totalRecords + 1));
                     partitionResponse.setRecordBatchs(topicFileReader.getRecordBatchs());
                 } else {
-                    partitionResponse.setRecordBatchLength(1);
+                    partitionResponse.setRecordCompactLength(new byte[]{ 0x00 });
+                    partitionResponse.setRecordBatchs(new ArrayList<>());
                 }
                 partitionResponses.add(partitionResponse);
             }
