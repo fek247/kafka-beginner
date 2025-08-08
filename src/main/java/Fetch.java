@@ -9,7 +9,6 @@ import java.util.List;
 
 import Common.LogFileReader;
 import Common.Record;
-import Common.RecordBatch;
 import Constant.ErrorCode;
 import Fetch.FetchRequest;
 import Fetch.FetchResponse;
@@ -30,6 +29,7 @@ public class Fetch extends BaseApi {
         this.dataInputStream = inputStream;
         this.dataOutputStream = outputStream;
     }
+
     @Override
     public void read() {
         if (dataInputStream == null) {
@@ -41,14 +41,6 @@ public class Fetch extends BaseApi {
         LogFileReader metadataLogFile = new LogFileReader();
         metadataLogFile.init(metadataLogFilePath, true);
         setMetadataLogFile(metadataLogFile);
-        // List<String> filePaths = metadataLogFile.getMessageFileStrings();
-        // for (String filePath : filePaths) {
-        //     LogFileReader topicFileReader = new LogFileReader();
-        //     topicFileReader.init(filePath, false);
-        //     List<RecordBatch> recordBatchs = topicFileReader.getRecordBatchs();
-        //     System.out.println("Record batch size on file path " + filePath + " is: " + recordBatchs.size());
-        //     break;
-        // }
 
         FetchRequest fetchRequest = new FetchRequest();
         fetchRequest.request(dataInputStream);
@@ -80,9 +72,8 @@ public class Fetch extends BaseApi {
         this.fetchResponse = new FetchResponse();
         this.fetchResponse.setThrottleTimeMs(0);
         this.fetchResponse.setErrorCode(ErrorCode.NO_ERROR);
-        this.fetchResponse.setSessionId(this.getFetchRequest().getSessionId());
+        this.fetchResponse.setSessionId(this.fetchRequest.getSessionId());
         this.fetchResponse.setTopicLength(this.fetchRequest.getTopicLength());
-        System.out.println("Topic length from response: " + this.fetchResponse.getTopicLength());
         List<TopicResponse> topicResponses = new ArrayList<>();
         for (TopicRequest topicRequest : this.fetchRequest.getTopicRequests()) {
             Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getTopicUUID());
@@ -99,11 +90,16 @@ public class Fetch extends BaseApi {
                 partitionResponse.setLogStartOffset(0);
                 partitionResponse.setAbortTransactionLength(0);
                 partitionResponse.setPreferredReadReplica(0);
-                String topicFileLog = "/tmp/kraft-combined-logs/" + this.metadataLogFile.getTopicName(topicRequest.getTopicUUID()) + "-" + partitionRequest.getPartitionId() + "/00000000000000000000.log";
-                LogFileReader topicFileReader = new LogFileReader();
-                topicFileReader.init(topicFileLog, false);
-                partitionResponse.setRecordBatchLength(topicFileReader.getRecordBatchs().size() + 1);
-                partitionResponse.setRecordBatchs(topicFileReader.getRecordBatchs());
+                String topicName = this.metadataLogFile.getTopicName(topicRequest.getTopicUUID());
+                if (topicName != null) {
+                    String topicFileLog = "/tmp/kraft-combined-logs/" + topicName + "-" + partitionRequest.getPartitionId() + "/00000000000000000000.log";
+                    LogFileReader topicFileReader = new LogFileReader();
+                    topicFileReader.init(topicFileLog, false);
+                    partitionResponse.setRecordBatchLength(topicFileReader.getRecordBatchs().size() + 1);
+                    partitionResponse.setRecordBatchs(topicFileReader.getRecordBatchs());
+                } else {
+                    partitionResponse.setRecordBatchLength(1);
+                }
                 partitionResponses.add(partitionResponse);
             }
 
@@ -113,7 +109,6 @@ public class Fetch extends BaseApi {
             topicResponse.setPartitionResponses(partitionResponses);
             topicResponses.add(topicResponse);
         }
-        System.out.println("throttleTimeMs from request: " + fetchRequest.getMaxWaitMs());
         this.fetchResponse.setTopicResponses(topicResponses);
         this.fetchResponse.setTagBuffer(this.header.getTagBuffer());
         fetchResponse.response(dOutBody);

@@ -3,6 +3,8 @@ package Common;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import Helpers.VarIntReader;
+
 public class Record {
     protected int length;
 
@@ -30,20 +32,13 @@ public class Record {
     public void response(DataOutputStream dataOutputStream)
     {
         try {
-            dataOutputStream.write(length);
-            System.out.println("Length: " + length);
+            dataOutputStream.write(VarIntReader.encodeSignedVarInt(length));
             dataOutputStream.writeByte(attributes);
-            System.out.println("attributes: " + attributes);
             dataOutputStream.write(timestampDelta);
-            System.out.println("timestampDelta: " + timestampDelta);
             dataOutputStream.write(offsetDelta);
-            System.out.println("offsetDelta: " + offsetDelta);
             dataOutputStream.write(keyLength);
-            System.out.println("keyLength: " + keyLength);
             dataOutputStream.write(key);
-            System.out.println("Key length" + key.length);
-            dataOutputStream.write(valueLength);
-            System.out.println("valueLength: " + valueLength);
+            dataOutputStream.write(VarIntReader.encodeSignedVarInt(valueLength));
             value.response(dataOutputStream);
             dataOutputStream.write(headerArrayCount);
         } catch (IOException e) {

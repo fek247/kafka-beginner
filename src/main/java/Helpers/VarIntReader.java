@@ -1,4 +1,5 @@
 package Helpers;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -41,5 +42,18 @@ public class VarIntReader {
             }
         }
         throw new IOException("Unexpected end of stream while reading Signed VarInt.");
+    }
+
+    public static byte[] encodeSignedVarInt(int value) {
+        int zigzag = (value << 1) ^ (value >> 31);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        while ((zigzag & ~0x7F) != 0) {
+            out.write((zigzag & 0x7F) | 0x80);
+            zigzag >>>= 7;
+        }
+        out.write(zigzag);
+
+        return out.toByteArray();
     }
 }

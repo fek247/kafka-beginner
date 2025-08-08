@@ -40,7 +40,6 @@ public class RecordBatch {
         try {
             dataOutputStream.writeLong(baseOffset);
             dataOutputStream.writeInt(batchLength);
-            System.out.println("Batch length: " + batchLength);
             dataOutputStream.writeInt(partitionLeaderEpoch);
             dataOutputStream.writeByte(magicByte);
 

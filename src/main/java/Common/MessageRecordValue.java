@@ -26,7 +26,6 @@ public class MessageRecordValue extends RecordValue {
     {
         try {
             dataOutputStream.write(this.message);
-            System.out.println("Record value: " + new String(message, StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }

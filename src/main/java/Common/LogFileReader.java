@@ -22,7 +22,6 @@ public class LogFileReader {
     public void init(String path, boolean isMetadataFile)
     {
         try {
-            System.out.println("File path: " + path);
             InputStream inputStream = new FileInputStream(new File(path));
             DataInputStream logDataInputStream = new DataInputStream(inputStream);
 
@@ -65,10 +64,10 @@ public class LogFileReader {
                     record.setTimestampDelta(VarIntReader.readSignedVarInt(logDataInputStream));
                     record.setOffsetDelta(VarIntReader.readSignedVarInt(logDataInputStream));
                     int keyLength = VarIntReader.readSignedVarInt(logDataInputStream);
-                    record.setKeyLength(keyLength);
                     if (keyLength == -1) {
                         keyLength = 0;
                     }
+                    record.setKeyLength(keyLength);
                     byte[] key = new byte[keyLength];
                     logDataInputStream.read(key);
                     record.setKey(key);
@@ -183,7 +182,6 @@ public class LogFileReader {
                         logDataInputStream.read(message);
                         MessageRecordValue messageRecordValue = new MessageRecordValue();
                         messageRecordValue.setMessage(message);
-                        System.out.println("Message from log file: " + new String(message, StandardCharsets.UTF_8));
                         record.setValue(messageRecordValue);
                     }
                     int header = VarIntReader.readUnsignedVarInt(logDataInputStream);
@@ -231,6 +229,22 @@ public class LogFileReader {
         }
 
         return null;
+    }
+
+    public List<Record> getListPartitionRecord(byte[] topicUUID)
+    {
+        List<Record> partitionRecords = new ArrayList<>();
+        for (RecordBatch recordBatch : this.recordBatchs) {
+            for (Record record : recordBatch.getRecords()) {
+                if (record.getValue().getType() == 3) {
+                    PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
+                    if (Arrays.toString(recordValue.getTopicUUID()).equals(Arrays.toString(topicUUID))) {
+                        partitionRecords.add(record);
+                    }
+                }
+            }
+        }
+        return partitionRecords;
     }
 
     public Record getPartitionRecordByUUID(byte[] topicUUID)

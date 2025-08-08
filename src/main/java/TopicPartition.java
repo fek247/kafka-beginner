@@ -136,7 +136,7 @@ public class TopicPartition extends BaseApi {
                 dOut.write(this.arrayLength);
                 // Topic
                     for (TopicRequest topicRequest : this.topicRequests) {
-                        TopicRecord topicRecord = (TopicRecord) this.metadataLogFile.getTopicInMetadatLog(Arrays.toString(topicRequest.getName()));
+                        Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(Arrays.toString(topicRequest.getName()));
 
                         TopicResponse topicResponse = new TopicResponse();
                         short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC_OR_PARTITION : ErrorCode.NO_ERROR;
@@ -153,32 +153,32 @@ public class TopicPartition extends BaseApi {
                         topicResponse.setInternal(false);
                         // Partition Array
                         List<PartitionResponse> listPartitionResponses = new ArrayList<>();
-                        Record partitionRecord = this.metadataLogFile.getPartitionRecordByUUID(uuid);
-                        if (!(partitionRecord.getValue() instanceof PartitionRecordValue)) {
-                            System.out.println("Return wrong record value type");
+                        if (topicRecord != null) {
+                            TopicRecordValue topicRecordValue = (TopicRecordValue) topicRecord.getValue();
+                            List<Record> listPartitionRecord = this.metadataLogFile.getListPartitionRecord(topicRecordValue.getUuid());
+                            for (Record partitionRecord : listPartitionRecord) {
+                                PartitionRecordValue partitionRecordValue = (PartitionRecordValue) partitionRecord.getValue();
+                                PartitionResponse partitionResponse = new PartitionResponse();
+                                partitionResponse.setErrorCode(ErrorCode.NO_ERROR);
+                                partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
+                                partitionResponse.setLeader(partitionRecordValue.getLeader());
+                                partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
+                                partitionResponse.setReplicasLength(partitionRecordValue.getReplicas().length + 1);
+                                partitionResponse.setReplicas(partitionRecordValue.getReplicas());
+                                partitionResponse.setInSyncReplicasLength(partitionRecordValue.getInSyncReplicas().length + 1);
+                                partitionResponse.setInSyncReplicas(partitionRecordValue.getInSyncReplicas());
+                                partitionResponse.setEligibleLeaderReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                                int[] emptyIntegerArr = new int[0];
+                                partitionResponse.setEligibleLeaderReplicas(emptyIntegerArr);
+                                partitionResponse.setLastKnowELRLength(partitionRecordValue.getInSyncReplicas().length);
+                                partitionResponse.setLastKnowELR(emptyIntegerArr);
+                                partitionResponse.setOfflineReplicaLength(partitionRecordValue.getInSyncReplicas().length);
+                                partitionResponse.setOfflineReplicas(emptyIntegerArr);
+                                partitionResponse.setTagBuffer(this.tagBuffer);
+                                listPartitionResponses.add(partitionResponse);
+                            }
                         }
 
-                        if (partitionRecord != null) {
-                            PartitionRecordValue partitionRecordValue = (PartitionRecordValue) partitionRecord.getValue();
-                            PartitionResponse partitionResponse = new PartitionResponse();
-                            partitionResponse.setErrorCode(ErrorCode.NO_ERROR);
-                            partitionResponse.setPartitionId(partitionRecordValue.getPartitionId());
-                            partitionResponse.setLeader(partitionRecordValue.getLeader());
-                            partitionResponse.setLeaderEpoch(partitionRecordValue.getLeaderEpoch());
-                            partitionResponse.setReplicasLength(partitionRecordValue.getReplicas().length + 1);
-                            partitionResponse.setReplicas(partitionRecordValue.getReplicas());
-                            partitionResponse.setInSyncReplicasLength(partitionRecordValue.getInSyncReplicas().length + 1);
-                            partitionResponse.setInSyncReplicas(partitionRecordValue.getInSyncReplicas());
-                            partitionResponse.setEligibleLeaderReplicaLength(partitionRecordValue.getInSyncReplicas().length);
-                            int[] emptyIntegerArr = new int[0];
-                            partitionResponse.setEligibleLeaderReplicas(emptyIntegerArr);
-                            partitionResponse.setLastKnowELRLength(partitionRecordValue.getInSyncReplicas().length);
-                            partitionResponse.setLastKnowELR(emptyIntegerArr);
-                            partitionResponse.setOfflineReplicaLength(partitionRecordValue.getInSyncReplicas().length);
-                            partitionResponse.setOfflineReplicas(emptyIntegerArr);
-                            partitionResponse.setTagBuffer(this.tagBuffer);
-                            listPartitionResponses.add(partitionResponse);
-                        }
                         topicResponse.setPartitionsLength(listPartitionResponses.size() + 1);
                         topicResponse.setPartitionsResponse(listPartitionResponses);
                         topicResponse.setTopicAuthorizedOperations(3567);

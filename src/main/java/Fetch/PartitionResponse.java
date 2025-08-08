@@ -44,8 +44,8 @@ public class PartitionResponse {
             }
             dataOutputStream.writeInt(preferredReadReplica);
             dataOutputStream.write(recordBatchLength);
-            for (RecordBatch recordBatch : this.recordBatchs) {
-                recordBatch.response(dataOutputStream);
+            for (int i = 0; i < recordBatchLength - 1; i++) {
+                recordBatchs.get(i).response(dataOutputStream);
             }
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {
