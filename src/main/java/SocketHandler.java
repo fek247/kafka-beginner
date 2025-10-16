@@ -39,6 +39,10 @@ public class SocketHandler extends Thread {
                 dataInputStream.read(headerContent);
                 header.setClientContent(headerContent);
                 header.setTagBuffer(dataInputStream.readByte());
+
+                if (header.getApiKey() == ApiKey.Produce) {
+                    baseBodyApi = new Produce(dataInputStream, dataOutputStream);
+                }
                 if (header.getApiKey() == ApiKey.ApiVersions) {
                     baseBodyApi = new ApiVersion(dataInputStream, dataOutputStream);
                 }

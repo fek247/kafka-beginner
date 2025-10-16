@@ -1,6 +1,7 @@
 package Common;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.List;
 import java.util.zip.CRC32C;
@@ -66,6 +67,29 @@ public class RecordBatch {
             dataOutputStream.writeInt(crcValue);
 
             dataOutputStream.write(payloadBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void request(DataInputStream dataInputStream)
+    {
+        try {
+            setBaseOffset(dataInputStream.readLong());
+            setBatchLength(dataInputStream.readInt());
+            setPartitionLeaderEpoch(dataInputStream.readInt());
+            setMagicByte(dataInputStream.readByte());
+            byte[] crc = new byte[4];
+            dataInputStream.read(crc);
+            setCrc(crc);
+            setAttributes(dataInputStream.readShort());
+            setLastOffsetDelta(dataInputStream.readInt());
+            setBaseTimestamp(dataInputStream.readLong());
+            setMaxTimestamp(dataInputStream.readLong());
+            setProducerId(dataInputStream.readLong());
+            setProducerEpoch(dataInputStream.readShort());
+            setBaseSequence(dataInputStream.readInt());
+            setRecordLength(dataInputStream.readInt());
         } catch (Exception e) {
             e.printStackTrace();
         }

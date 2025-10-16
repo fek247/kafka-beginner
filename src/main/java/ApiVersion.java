@@ -84,7 +84,7 @@ public class ApiVersion extends BaseApi {
             dOut.writeShort(code);
             // API Version Array
                 // Array Length
-                dOut.writeByte(4);
+                dOut.writeByte(5);
                 // API Version #1
                     // API Key
                     dOut.writeShort(ApiKey.Fetch);
@@ -112,6 +112,16 @@ public class ApiVersion extends BaseApi {
                     dOut.writeShort(0);
                     // Max Supported API Version
                     dOut.writeShort(4);
+                    // Tag Buffer
+                    dOut.writeByte(this.header.getTagBuffer());
+
+                // API Version #4
+                    // API Key
+                    dOut.writeShort(ApiKey.Produce);
+                    // Min Supported API Version
+                    dOut.writeShort(0);
+                    // Max Supported API Version
+                    dOut.writeShort(11);
                     // Tag Buffer
                     dOut.writeByte(this.header.getTagBuffer());
             // Throttle Time

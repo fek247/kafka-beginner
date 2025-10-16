@@ -2,7 +2,6 @@ package Common;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class MessageRecordValue extends RecordValue {
     public static byte MESSAGE_TYPE = 0;

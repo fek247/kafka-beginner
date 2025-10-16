@@ -1,5 +1,6 @@
 package Common;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -41,6 +42,34 @@ public class Record {
             dataOutputStream.write(VarIntReader.encodeSignedVarInt(valueLength));
             value.response(dataOutputStream);
             dataOutputStream.write(headerArrayCount);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Use for Api Produce(0)
+    public void request(DataInputStream dataInputStream)
+    {
+        try {
+            setLength(VarIntReader.readSignedVarInt(dataInputStream));
+            setAttributes(dataInputStream.readByte());
+            setTimestampDelta(VarIntReader.readSignedVarInt(dataInputStream));
+            setOffsetDelta(VarIntReader.readSignedVarInt(dataInputStream));
+            int keyLength = VarIntReader.readSignedVarInt(dataInputStream);
+            if (keyLength == -1) {
+                keyLength = 0;
+            }
+            setKeyLength(keyLength);
+            byte[] key = new byte[keyLength];
+            dataInputStream.read(key);
+            setKey(key);
+            int valueLength = VarIntReader.readSignedVarInt(dataInputStream);
+            setValueLength(valueLength);
+            byte[] message = new byte[valueLength];
+            dataInputStream.read(message);
+            MessageRecordValue messageRecordValue = new MessageRecordValue();
+            messageRecordValue.setMessage(message);
+            setValue(messageRecordValue);
         } catch (IOException e) {
             e.printStackTrace();
         }
