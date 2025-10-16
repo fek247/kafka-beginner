@@ -71,4 +71,12 @@ public class TopicRequest {
     public List<PartitionRequest> getPartitionRequests() {
         return partitionRequests;
     }
+
+    public int getNameLength() {
+        return nameLength;
+    }
+
+    public byte getTagBuffer() {
+        return tagBuffer;
+    }
 }
