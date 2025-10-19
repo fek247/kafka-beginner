@@ -4,6 +4,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import Helpers.VarIntReader;
+
 public class TopicResponse {
     private int nameLength;
 
@@ -18,8 +20,9 @@ public class TopicResponse {
     public void response(DataOutputStream dataOutputStream)
     {
         try {
-            dataOutputStream.write(nameLength);
+            dataOutputStream.write(VarIntReader.encodeUnsignedVarInt(nameLength));
             dataOutputStream.write(name);
+            dataOutputStream.write(VarIntReader.encodeUnsignedVarInt(partitionLength));
             for (PartitionResponse partitionResponse : this.partitionResponses) {
                 partitionResponse.response(dataOutputStream);
             }

@@ -90,6 +90,7 @@ public class RecordBatch {
             setProducerEpoch(dataInputStream.readShort());
             setBaseSequence(dataInputStream.readInt());
             setRecordLength(dataInputStream.readInt());
+            // TODO
         } catch (Exception e) {
             e.printStackTrace();
         }

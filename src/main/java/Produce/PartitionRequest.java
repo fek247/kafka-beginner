@@ -20,6 +20,7 @@ public class PartitionRequest {
         try {
             setPartitionIndex(dataInputStream.readInt());
             setRecordBatchSize(VarIntReader.readUnsignedVarInt(dataInputStream));
+            System.out.println("Record batch size: " + recordBatchSize);
             RecordBatch recordBatch = new RecordBatch();
             recordBatch.request(dataInputStream);
             setRecordBatch(recordBatch);

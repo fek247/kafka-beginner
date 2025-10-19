@@ -4,6 +4,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import Helpers.VarIntReader;
+
 public class ProduceResponse {
     private int topicLength;
 
@@ -16,14 +18,13 @@ public class ProduceResponse {
     public void response(DataOutputStream dataOutputStream)
     {
         try {
-            dataOutputStream.write(topicLength);
-            dataOutputStream.write(topicLength);
+            dataOutputStream.write(VarIntReader.encodeUnsignedVarInt(topicLength));
             for (TopicResponse topicResponse : this.topicResponses) {
                 topicResponse.response(dataOutputStream);
             }
             // Throttle Time
             dataOutputStream.writeInt(throttleTime);
-            // Tag buffer
+            // // Tag buffer
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {
         }

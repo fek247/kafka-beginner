@@ -28,7 +28,7 @@ public class PartitionResponse {
             dataOutputStream.writeLong(baseOffset);
             dataOutputStream.writeLong(logAppendTime);
             dataOutputStream.writeLong(logStartOffset);
-            dataOutputStream.writeByte(recordErrorLength);
+            dataOutputStream.writeByte(1);
             dataOutputStream.writeByte(errorMessage);
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {

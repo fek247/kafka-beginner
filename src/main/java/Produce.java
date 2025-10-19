@@ -57,6 +57,7 @@ public class Produce extends BaseApi {
             ByteArrayOutputStream bodyResponse = this.initBodyResponseData();
             this.dataOutputStream.writeInt(bodyResponse.size() + 5);
             this.dataOutputStream.writeInt(this.header.getCorrelationId());
+            System.out.println("CollerationId: " + this.header.getCorrelationId());
             this.dataOutputStream.write(this.header.getTagBuffer());
             this.dataOutputStream.write(bodyResponse.toByteArray());
         } catch (IOException e) {
@@ -75,15 +76,17 @@ public class Produce extends BaseApi {
         for (TopicRequest topicRequest : this.produceRequest.getTopicRequests()) {
             Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getName());
             List<PartitionResponse> partitionResponses = new ArrayList<>();
-            short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC : ErrorCode.NO_ERROR;
+            short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC_OR_PARTITION : ErrorCode.NO_ERROR;
+            long baseOffset, logAppendTime, logStartOffset;
+            baseOffset = logAppendTime = logStartOffset = (errorCode == ErrorCode.UNKNOWN_TOPIC_OR_PARTITION) ? -1 : 0;
 
             for (PartitionRequest partitionRequest : topicRequest.getPartitionRequests()) {
                 PartitionResponse partitionResponse = new PartitionResponse();
                 partitionResponse.setPartitionId(partitionRequest.getPartitionIndex());
                 partitionResponse.setErrorCode(errorCode);
-                partitionResponse.setBaseOffset(0);
-                partitionResponse.setLogAppendTime(0);
-                partitionResponse.setLogStartOffset(0);
+                partitionResponse.setBaseOffset(baseOffset);
+                partitionResponse.setLogAppendTime(logAppendTime);
+                partitionResponse.setLogStartOffset(logStartOffset);
                 partitionResponse.setRecordErrorLength((byte) 0);
                 partitionResponse.setErrorMessage((byte) 0);
                 partitionResponse.setTagBuffer(this.header.getTagBuffer());
@@ -106,6 +109,7 @@ public class Produce extends BaseApi {
             }
 
             TopicResponse topicResponse = new TopicResponse();
+            topicResponse.setNameLength(topicRequest.getNameLength());
             topicResponse.setName(topicRequest.getName());
             topicResponse.setPartitionLength(topicRequest.getPartitionLength());
             topicResponse.setPartitionResponses(partitionResponses);
