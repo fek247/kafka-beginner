@@ -37,8 +37,10 @@ public class Record {
             dataOutputStream.writeByte(attributes);
             dataOutputStream.write(timestampDelta);
             dataOutputStream.write(offsetDelta);
-            dataOutputStream.write(keyLength);
-            dataOutputStream.write(key);
+            dataOutputStream.write(VarIntReader.encodeSignedVarInt(keyLength));
+            if (keyLength > 0) {
+                dataOutputStream.write(key);
+            }
             dataOutputStream.write(VarIntReader.encodeSignedVarInt(valueLength));
             value.response(dataOutputStream);
             dataOutputStream.write(headerArrayCount);

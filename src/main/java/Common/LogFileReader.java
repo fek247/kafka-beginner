@@ -63,12 +63,12 @@ public class LogFileReader {
                     record.setTimestampDelta(VarIntReader.readSignedVarInt(logDataInputStream));
                     record.setOffsetDelta(VarIntReader.readSignedVarInt(logDataInputStream));
                     int keyLength = VarIntReader.readSignedVarInt(logDataInputStream);
-                    if (keyLength == -1) {
-                        keyLength = 0;
-                    }
                     record.setKeyLength(keyLength);
-                    byte[] key = new byte[keyLength];
-                    logDataInputStream.read(key);
+                    byte[] key = null;
+                    if (keyLength > 0) {
+                        key = new byte[keyLength];
+                        logDataInputStream.read(key);
+                    }
                     record.setKey(key);
                     int valueLength = VarIntReader.readSignedVarInt(logDataInputStream);
                     record.setValueLength(valueLength);
