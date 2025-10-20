@@ -3,6 +3,7 @@ package Common;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CRC32C;
 
@@ -90,7 +91,13 @@ public class RecordBatch {
             setProducerEpoch(dataInputStream.readShort());
             setBaseSequence(dataInputStream.readInt());
             setRecordLength(dataInputStream.readInt());
-            // TODO
+            List<Record> records = new ArrayList<>();
+            for (int i = 0; i < recordLength; i++) {
+                Record record = new Record();
+                record.request(dataInputStream);
+                records.add(record);
+            }
+            setRecords(records);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -2,6 +2,8 @@ package Produce;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import Common.RecordBatch;
 import Helpers.VarIntReader;
@@ -11,7 +13,7 @@ public class PartitionRequest {
 
     private int recordBatchSize;
 
-    private RecordBatch recordBatch;
+    private List<RecordBatch> recordBatchs;
 
     private byte tagBuffer;
 
@@ -21,9 +23,13 @@ public class PartitionRequest {
             setPartitionIndex(dataInputStream.readInt());
             setRecordBatchSize(VarIntReader.readUnsignedVarInt(dataInputStream));
             System.out.println("Record batch size: " + recordBatchSize);
-            RecordBatch recordBatch = new RecordBatch();
-            recordBatch.request(dataInputStream);
-            setRecordBatch(recordBatch);
+            recordBatchs = new ArrayList<>();
+            for (int i = 0; i < recordBatchSize - 1; i++) {
+                RecordBatch recordBatch = new RecordBatch();
+                recordBatch.request(dataInputStream);
+                recordBatchs.add(recordBatch);
+            }
+            setRecordBatchs(recordBatchs);
             setTagBuffer(dataInputStream.readByte());
         } catch (IOException e) {
             e.printStackTrace();
@@ -46,20 +52,20 @@ public class PartitionRequest {
         this.recordBatchSize = recordBatchSize;
     }
 
-    public RecordBatch getRecordBatch() {
-        return recordBatch;
-    }
-
-    public void setRecordBatch(RecordBatch recordBatch) {
-        this.recordBatch = recordBatch;
-    }
-
     public byte getTagBuffer() {
         return tagBuffer;
     }
 
     public void setTagBuffer(byte tagBuffer) {
         this.tagBuffer = tagBuffer;
+    }
+
+    public List<RecordBatch> getRecordBatchs() {
+        return recordBatchs;
+    }
+
+    public void setRecordBatchs(List<RecordBatch> recordBatchs) {
+        this.recordBatchs = recordBatchs;
     }
 
     

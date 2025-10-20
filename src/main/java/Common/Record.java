@@ -58,12 +58,12 @@ public class Record {
             setTimestampDelta(VarIntReader.readSignedVarInt(dataInputStream));
             setOffsetDelta(VarIntReader.readSignedVarInt(dataInputStream));
             int keyLength = VarIntReader.readSignedVarInt(dataInputStream);
-            if (keyLength == -1) {
-                keyLength = 0;
-            }
             setKeyLength(keyLength);
-            byte[] key = new byte[keyLength];
-            dataInputStream.read(key);
+            byte[] key = null;
+            if (keyLength > 0) {
+                key = new byte[keyLength];
+                dataInputStream.read(key);
+            }
             setKey(key);
             int valueLength = VarIntReader.readSignedVarInt(dataInputStream);
             setValueLength(valueLength);
@@ -71,6 +71,7 @@ public class Record {
             dataInputStream.read(message);
             MessageRecordValue messageRecordValue = new MessageRecordValue();
             messageRecordValue.setMessage(message);
+            System.out.println("Message: " + message);
             setValue(messageRecordValue);
         } catch (IOException e) {
             e.printStackTrace();
