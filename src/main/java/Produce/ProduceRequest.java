@@ -24,13 +24,9 @@ public class ProduceRequest {
     {
         try {
             setTransactionId(dataInputStream.readByte());
-            System.out.println("TransactionId: " + transactionId);
             setAcks(dataInputStream.readShort());
-            System.out.println("Acks: " + acks);
             setTimeoutMs(dataInputStream.readInt());
-            System.out.println("Timeout: " + timeoutMs);
             setTopicLength(VarIntReader.readUnsignedVarInt(dataInputStream));
-            System.out.println("Topic length: " + topicLength);
             List<TopicRequest> topicRequests = new ArrayList<>();
             for (int i = 0; i < topicLength - 1; i++) {
                 TopicRequest topicRequest = new TopicRequest();

@@ -22,7 +22,6 @@ public class TopicRequest {
             int partitionLength = VarIntReader.readUnsignedVarInt(dataInputStream);
             setPartitionLength(partitionLength);
             List<PartitionRequest> partitionRequests = new ArrayList<>();
-            System.out.println("partition length: " + partitionLength);
             for (int i = 0; i < partitionLength - 1; i++) {
                 PartitionRequest partitionRequest = new PartitionRequest();
                 partitionRequest.request(dataInputStream);

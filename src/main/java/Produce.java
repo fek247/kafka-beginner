@@ -57,7 +57,6 @@ public class Produce extends BaseApi {
             ByteArrayOutputStream bodyResponse = this.initBodyResponseData();
             this.dataOutputStream.writeInt(bodyResponse.size() + 5);
             this.dataOutputStream.writeInt(this.header.getCorrelationId());
-            System.out.println("CollerationId: " + this.header.getCorrelationId());
             this.dataOutputStream.write(this.header.getTagBuffer());
             this.dataOutputStream.write(bodyResponse.toByteArray());
         } catch (IOException e) {

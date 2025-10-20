@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 import Constant.ApiKey;
 
@@ -33,17 +32,12 @@ public class SocketHandler extends Thread {
                 // Read header
                 RequestHeader header = new RequestHeader();
                 header.setApiKey(dataInputStream.readShort());
-                System.out.println("Api key: " + header.getApiKey());
                 header.setApiVersion(dataInputStream.readShort());
-                System.out.println("Api version: " + header.getApiVersion());
                 header.setCorrelationId(dataInputStream.readInt());
-                System.out.println("CorrelationId" + header.getCorrelationId());
                 header.setClientLength(dataInputStream.readShort());
-                System.out.println("Client length: " + header.getHeaderLength());
                 byte[] headerContent = new byte[header.getHeaderLength()];
                 dataInputStream.read(headerContent);
                 header.setClientContent(headerContent);
-                //ystem.out.println("Client content" + Arrays.toString(headerContent));
                 header.setTagBuffer(dataInputStream.readByte());
 
                 if (header.getApiKey() == ApiKey.Produce) {
