@@ -17,6 +17,7 @@ import Common.Record;
 import Common.RecordBatch;
 import Common.TopicRecordValue;
 import Constant.ErrorCode;
+import Constant.RecordBatchMode;
 import Produce.PartitionRequest;
 import Produce.PartitionResponse;
 import Produce.ProduceRequest;
@@ -132,7 +133,7 @@ public class Produce extends BaseApi {
             String logFilePath = "/tmp/kraft-combined-logs/" + topicName + "-" + partitionId + "/00000000000000000000.log";
             OutputStream outputStream = new FileOutputStream(new File(logFilePath));
             DataOutputStream dataOutputStream = new DataOutputStream(outputStream); 
-            recordBatch.response(dataOutputStream);
+            recordBatch.response(dataOutputStream, RecordBatchMode.WRITE);
         } catch(IOException e) {
             e.printStackTrace();
         }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import Common.RecordBatch;
+import Constant.RecordBatchMode;
 
 public class PartitionResponse {
     private int partitionId;
@@ -44,7 +45,7 @@ public class PartitionResponse {
             dataOutputStream.writeInt(preferredReadReplica);
             dataOutputStream.write(recordCompactLength);
             for (RecordBatch recordBatch : this.recordBatchs) {
-                recordBatch.response(dataOutputStream);
+                recordBatch.response(dataOutputStream, RecordBatchMode.READ);
             }
             dataOutputStream.writeByte(tagBuffer);
         } catch (IOException e) {

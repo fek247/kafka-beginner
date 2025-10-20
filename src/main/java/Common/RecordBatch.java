@@ -4,8 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.CRC32C;
+
+import Constant.RecordBatchMode;
 
 public class RecordBatch {
     private long baseOffset;
@@ -36,7 +39,7 @@ public class RecordBatch {
 
     private List<Record> records;
 
-    public void response(DataOutputStream dataOutputStream)
+    public void response(DataOutputStream dataOutputStream, short mode)
     {
         try {
             dataOutputStream.writeLong(baseOffset);
@@ -61,11 +64,14 @@ public class RecordBatch {
             
             byte[] payloadBytes = payloadStream.toByteArray();
 
-            CRC32C crc32c = new CRC32C();
-            crc32c.update(payloadBytes);
-            int crcValue = (int) crc32c.getValue();
-
-            dataOutputStream.writeInt(crcValue);
+            if (mode == RecordBatchMode.READ) {
+                CRC32C crc32c = new CRC32C();
+                crc32c.update(payloadBytes);
+                int crcValue = (int) crc32c.getValue();
+                dataOutputStream.writeInt(crcValue);
+            } else {
+                dataOutputStream.write(crc);
+            }
 
             dataOutputStream.write(payloadBytes);
         } catch (Exception e) {
