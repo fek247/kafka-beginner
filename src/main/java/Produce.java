@@ -5,10 +5,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import Common.LogFileReader;
 import Common.Record;
+import Common.TopicRecordValue;
 import Constant.ErrorCode;
 import Produce.PartitionRequest;
 import Produce.PartitionResponse;
@@ -73,13 +75,22 @@ public class Produce extends BaseApi {
         this.produceResponse.setTopicLength(this.produceRequest.getTopicLength());
         List<TopicResponse> topicResponses = new ArrayList<>();
         for (TopicRequest topicRequest : this.produceRequest.getTopicRequests()) {
-            Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(topicRequest.getName());
+            Record topicRecord = this.metadataLogFile.getTopicInMetadatLog(Arrays.toString(topicRequest.getName()));
             List<PartitionResponse> partitionResponses = new ArrayList<>();
-            short errorCode = topicRecord == null ? ErrorCode.UNKNOWN_TOPIC_OR_PARTITION : ErrorCode.NO_ERROR;
-            long baseOffset, logAppendTime, logStartOffset;
-            baseOffset = logAppendTime = logStartOffset = (errorCode == ErrorCode.UNKNOWN_TOPIC_OR_PARTITION) ? -1 : 0;
+            short errorCode = ErrorCode.UNKNOWN_TOPIC_OR_PARTITION;
+            long baseOffset = -1, logAppendTime = -1, logStartOffset = -1;
 
             for (PartitionRequest partitionRequest : topicRequest.getPartitionRequests()) {
+                int partitionId = partitionRequest.getPartitionIndex();
+                if (topicRecord != null) {
+                    TopicRecordValue topicRecordValue = (TopicRecordValue) topicRecord.getValue();
+                    if (this.metadataLogFile.checkPartitionRecordExists(topicRecordValue.getUuid(), partitionId)) {
+                        errorCode = ErrorCode.NO_ERROR;
+                        baseOffset = 0;
+                        logStartOffset = 0;
+                    }
+                }
+
                 PartitionResponse partitionResponse = new PartitionResponse();
                 partitionResponse.setPartitionId(partitionRequest.getPartitionIndex());
                 partitionResponse.setErrorCode(errorCode);
@@ -89,21 +100,6 @@ public class Produce extends BaseApi {
                 partitionResponse.setRecordErrorLength((byte) 0);
                 partitionResponse.setErrorMessage((byte) 0);
                 partitionResponse.setTagBuffer(this.header.getTagBuffer());
-                // String topicName = this.metadataLogFile.getTopicName(topicRequest.getTopicUUID());
-                // if (topicName != null) {
-                //     String topicFileLog = "/tmp/kraft-combined-logs/" + topicName + "-" + partitionRequest.getPartitionIndex() + "/00000000000000000000.log";
-                //     LogFileReader topicFileReader = new LogFileReader();
-                //     topicFileReader.init(topicFileLog, false);
-                //     int totalRecords = 0;
-                //     for (RecordBatch recordBatch : topicFileReader.getRecordBatchs()) {
-                //         totalRecords += 12 + recordBatch.getBatchLength();
-                //     }
-                //     partitionResponse.setRecordCompactLength(VarIntReader.encodeUnsignedVarInt(totalRecords + 1));
-                //     partitionResponse.setRecordBatchs(topicFileReader.getRecordBatchs());
-                // } else {
-                //     partitionResponse.setRecordCompactLength(new byte[]{ 0x00 });
-                //     partitionResponse.setRecordBatchs(new ArrayList<>());
-                // }
                 partitionResponses.add(partitionResponse);
             }
 

@@ -71,6 +71,4 @@ public class TopicResponse {
     public void setTagBuffer(byte tagBuffer) {
         this.tagBuffer = tagBuffer;
     }
-
-    
 }

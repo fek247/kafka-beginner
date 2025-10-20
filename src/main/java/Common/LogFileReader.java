@@ -14,13 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import Constant.RecordType;
 import Helpers.VarIntReader;
 
 public class LogFileReader {
     private List<RecordBatch> recordBatchs;
 
-    public void init(String path, boolean isMetadataFile)
-    {
+    public void init(String path, boolean isMetadataFile) {
         try {
             InputStream inputStream = new FileInputStream(new File(path));
             DataInputStream logDataInputStream = new DataInputStream(inputStream);
@@ -76,100 +76,105 @@ public class LogFileReader {
                         byte frameVersion = logDataInputStream.readByte();
                         byte type = logDataInputStream.readByte();
                         switch (type) {
-                            case 2:
-                                {
-                                    TopicRecordValue topicRecordValue = new TopicRecordValue();
-                                    topicRecordValue.setFrameVersion(frameVersion);
-                                    topicRecordValue.setVersion(logDataInputStream.readByte());
-                                    int topicNameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                    topicRecordValue.setNameLength(topicNameLength);
-                                    byte[] topicName = new byte[topicNameLength - 1];
-                                    logDataInputStream.read(topicName);
-                                    topicRecordValue.setName(topicName);
-                                    byte[] topicUUID = new byte[16];
-                                    logDataInputStream.read(topicUUID);
-                                    topicRecordValue.setUuid(topicUUID);
-                                    topicRecordValue.setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                            case 2: {
+                                TopicRecordValue topicRecordValue = new TopicRecordValue();
+                                topicRecordValue.setFrameVersion(frameVersion);
+                                topicRecordValue.setVersion(logDataInputStream.readByte());
+                                int topicNameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+                                topicRecordValue.setNameLength(topicNameLength);
+                                byte[] topicName = new byte[topicNameLength - 1];
+                                logDataInputStream.read(topicName);
+                                topicRecordValue.setName(topicName);
+                                byte[] topicUUID = new byte[16];
+                                logDataInputStream.read(topicUUID);
+                                topicRecordValue.setUuid(topicUUID);
+                                topicRecordValue
+                                        .setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
 
-                                    record.setValue(topicRecordValue);
-                                    break;
+                                record.setValue(topicRecordValue);
+                                break;
+                            }
+                            case 3: {
+                                PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
+                                partitionRecordValue.setFrameVersion(frameVersion);
+                                partitionRecordValue.setVersion(logDataInputStream.readByte());
+                                partitionRecordValue.setPartitionId(logDataInputStream.readInt());
+                                byte[] topicUUID = new byte[16];
+                                logDataInputStream.read(topicUUID);
+                                partitionRecordValue.setTopicUUID(topicUUID);
+
+                                // Set replicas
+                                partitionRecordValue
+                                        .setReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                int[] replicaArr = new int[partitionRecordValue.getReplicaLength() - 1];
+                                for (int j = 0; j < replicaArr.length; j++) {
+                                    replicaArr[j] = logDataInputStream.readInt();
                                 }
-                            case 3:
-                                {
-                                    PartitionRecordValue partitionRecordValue = new PartitionRecordValue();
-                                    partitionRecordValue.setFrameVersion(frameVersion);
-                                    partitionRecordValue.setVersion(logDataInputStream.readByte());
-                                    partitionRecordValue.setPartitionId(logDataInputStream.readInt());
-                                    byte[] topicUUID = new byte[16];
-                                    logDataInputStream.read(topicUUID);
-                                    partitionRecordValue.setTopicUUID(topicUUID);
+                                partitionRecordValue.setReplicas(replicaArr);
 
-                                    // Set replicas
-                                    partitionRecordValue.setReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
-                                    int[] replicaArr = new int[partitionRecordValue.getReplicaLength() - 1];
-                                    for (int j = 0; j < replicaArr.length; j++) {
-                                        replicaArr[j] = logDataInputStream.readInt();
-                                    }
-                                    partitionRecordValue.setReplicas(replicaArr);
-
-                                    // Set in-sync replicas
-                                    partitionRecordValue.setInSyncReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
-                                    int[] inSyncReplicaArr = new int[partitionRecordValue.getInSyncReplicaLength() - 1];
-                                    for (int j = 0; j < inSyncReplicaArr.length; j++) {
-                                        inSyncReplicaArr[j] = logDataInputStream.readInt();
-                                    }
-                                    partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
-
-                                    // Set reming replicas
-                                    partitionRecordValue.setRemovingReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
-                                    int[] removingReplicaArr = new int[partitionRecordValue.getRemovingReplicaLength() - 1];
-                                    for (int j = 0; j < removingReplicaArr.length; j++) {
-                                        removingReplicaArr[j] = logDataInputStream.readInt();
-                                    }
-                                    partitionRecordValue.setRemovingReplicas(removingReplicaArr);
-
-                                    // Set adding replicas
-                                    partitionRecordValue.setAddingReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
-                                    int[] addingReplicas = new int[partitionRecordValue.getAddingReplicaLength() - 1];
-                                    for (int j = 0; j < addingReplicas.length; j++) {
-                                        addingReplicas[j] = logDataInputStream.readInt();
-                                    }
-                                    partitionRecordValue.setAddingReplicas(addingReplicas);
-
-                                    partitionRecordValue.setLeader(logDataInputStream.readInt());
-                                    partitionRecordValue.setLeaderEpoch(logDataInputStream.readInt());
-                                    partitionRecordValue.setPartitionEpoch(logDataInputStream.readInt());
-
-                                    // Set directory
-                                    partitionRecordValue.setDirectoyLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
-                                    byte[][] directories = new byte[partitionRecordValue.getDirectoyLengh() - 1][];
-                                    for (int j = 0; j < directories.length; j++) {
-                                        byte[] uuid = new byte[16];
-                                        logDataInputStream.read(uuid);
-                                        directories[j] = uuid;
-                                    }
-                                    partitionRecordValue.setDirectories(directories);
-                                    partitionRecordValue.setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
-
-                                    record.setValue(partitionRecordValue);
-                                    break;
+                                // Set in-sync replicas
+                                partitionRecordValue
+                                        .setInSyncReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                int[] inSyncReplicaArr = new int[partitionRecordValue.getInSyncReplicaLength() - 1];
+                                for (int j = 0; j < inSyncReplicaArr.length; j++) {
+                                    inSyncReplicaArr[j] = logDataInputStream.readInt();
                                 }
-                            case 12:
-                                {
-                                    FeatureLevelRecordValue featureLevelRecordValue = new FeatureLevelRecordValue();
-                                    featureLevelRecordValue.setFrameVersion(frameVersion);
-                                    featureLevelRecordValue.setVersion(logDataInputStream.readByte());
-                                    int nameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
-                                    featureLevelRecordValue.setNameLength(nameLength);
-                                    byte[] name = new byte[nameLength - 1];
-                                    logDataInputStream.read(name);
-                                    featureLevelRecordValue.setName(name);
-                                    featureLevelRecordValue.setFeatureLevel(logDataInputStream.readShort());
-                                    featureLevelRecordValue.setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                partitionRecordValue.setInSyncReplicas(inSyncReplicaArr);
 
-                                    record.setValue(featureLevelRecordValue);
-                                    break;
+                                // Set reming replicas
+                                partitionRecordValue
+                                        .setRemovingReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                int[] removingReplicaArr = new int[partitionRecordValue.getRemovingReplicaLength() - 1];
+                                for (int j = 0; j < removingReplicaArr.length; j++) {
+                                    removingReplicaArr[j] = logDataInputStream.readInt();
                                 }
+                                partitionRecordValue.setRemovingReplicas(removingReplicaArr);
+
+                                // Set adding replicas
+                                partitionRecordValue
+                                        .setAddingReplicaLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                int[] addingReplicas = new int[partitionRecordValue.getAddingReplicaLength() - 1];
+                                for (int j = 0; j < addingReplicas.length; j++) {
+                                    addingReplicas[j] = logDataInputStream.readInt();
+                                }
+                                partitionRecordValue.setAddingReplicas(addingReplicas);
+
+                                partitionRecordValue.setLeader(logDataInputStream.readInt());
+                                partitionRecordValue.setLeaderEpoch(logDataInputStream.readInt());
+                                partitionRecordValue.setPartitionEpoch(logDataInputStream.readInt());
+
+                                // Set directory
+                                partitionRecordValue
+                                        .setDirectoyLength(VarIntReader.readUnsignedVarInt(logDataInputStream));
+                                byte[][] directories = new byte[partitionRecordValue.getDirectoyLengh() - 1][];
+                                for (int j = 0; j < directories.length; j++) {
+                                    byte[] uuid = new byte[16];
+                                    logDataInputStream.read(uuid);
+                                    directories[j] = uuid;
+                                }
+                                partitionRecordValue.setDirectories(directories);
+                                partitionRecordValue
+                                        .setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
+
+                                record.setValue(partitionRecordValue);
+                                break;
+                            }
+                            case 12: {
+                                FeatureLevelRecordValue featureLevelRecordValue = new FeatureLevelRecordValue();
+                                featureLevelRecordValue.setFrameVersion(frameVersion);
+                                featureLevelRecordValue.setVersion(logDataInputStream.readByte());
+                                int nameLength = VarIntReader.readUnsignedVarInt(logDataInputStream);
+                                featureLevelRecordValue.setNameLength(nameLength);
+                                byte[] name = new byte[nameLength - 1];
+                                logDataInputStream.read(name);
+                                featureLevelRecordValue.setName(name);
+                                featureLevelRecordValue.setFeatureLevel(logDataInputStream.readShort());
+                                featureLevelRecordValue
+                                        .setTaggedFieldsCount(VarIntReader.readUnsignedVarInt(logDataInputStream));
+
+                                record.setValue(featureLevelRecordValue);
+                                break;
+                            }
                             default:
                                 logDataInputStream.skip(valueLength - 2);
                                 System.out.println("Don't support record type: " + type);
@@ -198,13 +203,13 @@ public class LogFileReader {
         }
     }
 
-    public Record getTopicInMetadatLog(String name)
-    {
+    public Record getTopicInMetadatLog(String bytesName) {
         for (RecordBatch recordBatch : this.recordBatchs) {
             for (Record record : recordBatch.getRecords()) {
-                if (record.getValue().getType() == 2) {
+                if (record.getValue().getType() == RecordType.Topic) {
                     TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
-                    if (Arrays.toString(recordValue.getName()).equals(name)) {
+                    System.out.println(Arrays.toString(recordValue.getName()));
+                    if (Arrays.toString(recordValue.getName()).equals(bytesName)) {
                         return record;
                     }
                 }
@@ -214,11 +219,10 @@ public class LogFileReader {
         return null;
     }
 
-    public Record getTopicInMetadatLog(byte[] topicUUID)
-    {
+    public Record getTopicInMetadatLog(byte[] topicUUID) {
         for (RecordBatch recordBatch : this.recordBatchs) {
             for (Record record : recordBatch.getRecords()) {
-                if (record.getValue().getType() == 2) {
+                if (record.getValue().getType() == RecordType.Topic) {
                     TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
                     if (Arrays.toString(recordValue.getUuid()).equals(Arrays.toString(topicUUID))) {
                         return record;
@@ -230,12 +234,11 @@ public class LogFileReader {
         return null;
     }
 
-    public List<Record> getListPartitionRecord(byte[] topicUUID)
-    {
+    public List<Record> getListPartitionRecord(byte[] topicUUID) {
         List<Record> partitionRecords = new ArrayList<>();
         for (RecordBatch recordBatch : this.recordBatchs) {
             for (Record record : recordBatch.getRecords()) {
-                if (record.getValue().getType() == 3) {
+                if (record.getValue().getType() == RecordType.Partition) {
                     PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
                     if (Arrays.toString(recordValue.getTopicUUID()).equals(Arrays.toString(topicUUID))) {
                         partitionRecords.add(record);
@@ -246,11 +249,10 @@ public class LogFileReader {
         return partitionRecords;
     }
 
-    public Record getPartitionRecordByUUID(byte[] topicUUID)
-    {
+    public Record getPartitionRecordByUUID(byte[] topicUUID) {
         for (RecordBatch recordBatch : this.recordBatchs) {
             for (Record record : recordBatch.getRecords()) {
-                if (record.getValue().getType() == 3) {
+                if (record.getValue().getType() == RecordType.Partition) {
                     PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
                     if (Arrays.toString(recordValue.getTopicUUID()).equals(Arrays.toString(topicUUID))) {
                         return record;
@@ -262,8 +264,23 @@ public class LogFileReader {
         return null;
     }
 
-    public List<String> getMessageFileStrings()
-    {
+    public boolean checkPartitionRecordExists(byte[] topicUUID, int partitionId) {
+        for (RecordBatch recordBatch : this.recordBatchs) {
+            for (Record record : recordBatch.getRecords()) {
+                if (record.getValue().getType() == RecordType.Partition) {
+                    PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
+                    if (Arrays.toString(recordValue.getTopicUUID()).equals(Arrays.toString(topicUUID))
+                            && recordValue.getPartitionId() == partitionId) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public List<String> getMessageFileStrings() {
         String tempPath = "/tmp/kraft-combined-logs/";
         Map<String, List<Integer>> topicNamePartitions = new HashMap<>();
         Map<String, String> topicNameUUIDs = new HashMap<>();
@@ -273,7 +290,8 @@ public class LogFileReader {
             for (Record record : recordBatch.getRecords()) {
                 if (record.getValue().getType() == 2) {
                     TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
-                    topicNameUUIDs.put(Arrays.toString(recordValue.getUuid()), new String(recordValue.getName(), StandardCharsets.UTF_8));
+                    topicNameUUIDs.put(Arrays.toString(recordValue.getUuid()),
+                            new String(recordValue.getName(), StandardCharsets.UTF_8));
                 }
                 if (record.getValue().getType() == 3) {
                     PartitionRecordValue recordValue = (PartitionRecordValue) record.getValue();
@@ -300,8 +318,7 @@ public class LogFileReader {
         return results;
     }
 
-    public String getTopicName(byte[] topicUUID)
-    {
+    public String getTopicName(byte[] topicUUID) {
         for (RecordBatch recordBatch : this.recordBatchs) {
             for (Record record : recordBatch.getRecords()) {
                 if (record.getValue().getType() == 2) {
