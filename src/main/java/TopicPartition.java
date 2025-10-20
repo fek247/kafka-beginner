@@ -4,12 +4,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import Common.LogFileReader;
 import Common.PartitionRecordValue;
 import Common.Record;
-import Common.TopicRecord;
 import Common.TopicRecordValue;
 import Constant.ErrorCode;
 import Helpers.VarIntReader;
@@ -96,6 +96,7 @@ public class TopicPartition extends BaseApi {
                 topicRequest.request(dataInputStream);
                 topicRequests.add(topicRequest);
             }
+            topicRequests.sort(Comparator.comparing(TopicRequest::getNameAsString));
             setTopicRequests(topicRequests);
             setPartitionLimit(dataInputStream.readInt());
             setCursor(dataInputStream.readByte());

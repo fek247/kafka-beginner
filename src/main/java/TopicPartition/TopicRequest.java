@@ -2,6 +2,8 @@ package TopicPartition;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import Helpers.VarIntReader;
 
 public class TopicRequest {
@@ -47,5 +49,9 @@ public class TopicRequest {
 
     public void setTagBuffer(byte tagBuffer) {
         this.tagBuffer = tagBuffer;
+    }
+
+    public String getNameAsString() {
+        return new String(name, StandardCharsets.UTF_8);
     }
 }
