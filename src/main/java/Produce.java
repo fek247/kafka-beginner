@@ -3,13 +3,18 @@
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import Common.LogFileReader;
 import Common.Record;
+import Common.RecordBatch;
 import Common.TopicRecordValue;
 import Constant.ErrorCode;
 import Produce.PartitionRequest;
@@ -91,6 +96,9 @@ public class Produce extends BaseApi {
                     }
                 }
 
+                // Store record to log file <log-dir>/<topic-name>-<partition-index>/00000000000000000000.log
+                storeRecord(partitionRequest.getRecordBatch(), new String(topicRequest.getName(), StandardCharsets.UTF_8), partitionId);
+
                 PartitionResponse partitionResponse = new PartitionResponse();
                 partitionResponse.setPartitionId(partitionRequest.getPartitionIndex());
                 partitionResponse.setErrorCode(errorCode);
@@ -116,6 +124,19 @@ public class Produce extends BaseApi {
         produceResponse.response(dOutBody);
 
         return byteArrBodyRes;
+    }
+
+    private void storeRecord(RecordBatch recordBatch, String topicName, int partitionId)
+    {
+        try {
+            String logFilePath = "/tmp/kraft-combined-logs/" + topicName + "-" + partitionId + "/00000000000000000000.log";
+            OutputStream outputStream = new FileOutputStream(new File(logFilePath));
+            DataOutputStream dataOutputStream = new DataOutputStream(outputStream); 
+            recordBatch.response(dataOutputStream);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
     }
 
     public ProduceRequest getProduceRequest() {

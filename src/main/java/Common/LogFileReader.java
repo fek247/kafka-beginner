@@ -208,7 +208,6 @@ public class LogFileReader {
             for (Record record : recordBatch.getRecords()) {
                 if (record.getValue().getType() == RecordType.Topic) {
                     TopicRecordValue recordValue = (TopicRecordValue) record.getValue();
-                    System.out.println(Arrays.toString(recordValue.getName()));
                     if (Arrays.toString(recordValue.getName()).equals(bytesName)) {
                         return record;
                     }
