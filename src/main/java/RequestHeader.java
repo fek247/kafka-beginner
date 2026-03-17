@@ -57,12 +57,12 @@ public class RequestHeader {
         return this.correlationId;
     }
 
-    public short getHeaderLength()
+    public short getClientLength()
     {
         return this.clientLength;
     }
 
-    public byte[] getHeaderContent()
+    public byte[] getClientContent()
     {
         return this.clientContent;
     }

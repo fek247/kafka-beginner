@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,9 +26,13 @@ public class SocketHandler extends Thread {
             DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
             BaseApi baseBodyApi = null;
 
-            while ((dataInputStream.read()) != -1) {
-                // Skip next three byte belong to message size
-                dataInputStream.skip(3);
+            while (true) {
+                int messageSize;
+                try {
+                    messageSize = dataInputStream.readInt();
+                } catch (EOFException e) {
+                    break;
+                }
 
                 // Read header
                 RequestHeader header = new RequestHeader();
@@ -35,7 +40,7 @@ public class SocketHandler extends Thread {
                 header.setApiVersion(dataInputStream.readShort());
                 header.setCorrelationId(dataInputStream.readInt());
                 header.setClientLength(dataInputStream.readShort());
-                byte[] headerContent = new byte[header.getHeaderLength()];
+                byte[] headerContent = new byte[header.getClientLength()];
                 dataInputStream.read(headerContent);
                 header.setClientContent(headerContent);
                 header.setTagBuffer(dataInputStream.readByte());
@@ -53,9 +58,14 @@ public class SocketHandler extends Thread {
                     baseBodyApi = new Fetch(dataInputStream, dataOutputStream);
                 }
 
+                if (baseBodyApi == null) {
+                    System.err.println("Unsupported API Key: " + header.getApiKey());
+                }
+
                 baseBodyApi.setHeader(header);
                 baseBodyApi.read();
                 baseBodyApi.write();
+                dataOutputStream.flush();
             }
         } catch (IOException e) {
             System.out.println("Local address: " + socket.getLocalAddress());

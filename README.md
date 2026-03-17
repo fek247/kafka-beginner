@@ -1,35 +1,24 @@
-[![progress-banner](https://backend.codecrafters.io/progress/kafka/1e8c1e63-b1f1-46d9-b500-92c6b408b38c)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Kafka Wire Protocol Implementation
 
-This is a starting point for Java solutions to the
-["Build Your Own Kafka" Challenge](https://codecrafters.io/challenges/kafka).
+A bare-bones implementation of the Kafka Wire Protocol in Java. Built from scratch using raw TCP sockets and byte streams to pass the [CodeCrafters "Build Your Own Kafka" challenge](https://app.codecrafters.io/users/fek247).
 
-In this challenge, you'll build a toy Kafka clone that's capable of accepting
-and responding to APIVersions & Fetch API requests. You'll also learn about
-encoding and decoding messages using the Kafka wire protocol. You'll also learn
-about handling the network protocol, event loops, TCP sockets and more.
+## Core Implementation
+- **Raw Socket I/O:** Multi-threaded TCP server handling concurrent client connections using `java.net.Socket`.
+- **Binary Parsing:** Manual Big-Endian byte decoding for Kafka primitives (`int32`, `int16`, `varint`).
+- **Protocol Versioning:** Implemented context-aware parsing for Kafka's Flexible Versions (KIP-482), correctly handling compact arrays, compact strings, and tagged fields without stream corruption.
+- **Fault Tolerance:** Robust stream management to prevent deadlocks during abrupt client disconnects (`EOFException`) and missing KRaft metadata files.
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Supported APIs
+Handles protocol handshaking, topology discovery, and core messaging pipelines:
 
-# Passing the first stage
+| API Key | Name | Supported Versions |
+| :--- | :--- | :--- |
+| 18 | `API_VERSIONS` | 0 - 4 |
+| 75 | `DESCRIBE_TOPIC_PARTITIONS` | 0 |
+| 0  | `PRODUCE` | 0 - 11 |
+| 1  | `FETCH` | 0 - 17 |
 
-The entry point for your Kafka implementation is in `src/main/java/Main.java`.
-Study and uncomment the relevant code, and push your changes to pass the first
-stage:
-
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
-
-That's all!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `mvn` installed locally
-1. Run `./your_program.sh` to run your Kafka broker, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## Usage
+Start the broker on port 9092:
+```bash
+./spawn_kafka.sh

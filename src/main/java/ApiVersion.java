@@ -39,6 +39,11 @@ public class ApiVersion extends BaseApi {
         if (dataInputStream == null) {
             return;
         }
+
+        if (this.header.getApiVersion() < 3) {
+            return; 
+        }
+
         try {
             setBodyLength(dataInputStream.readByte());
             byte[] bodyContent = new byte[this.getBodyLength() - 1];
